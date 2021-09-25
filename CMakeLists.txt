@@ -105,7 +105,7 @@ message(STATUS "foo include dir: ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}")
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
+#  INCLUDE_DIRS include
  LIBRARIES ros2lcm
  CATKIN_DEPENDS lcm nav_msgs roscpp rospy sensor_msgs std_msgs
  DEPENDS system_lib armadillo
