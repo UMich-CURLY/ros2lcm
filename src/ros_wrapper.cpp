@@ -50,6 +50,7 @@ odometry_t* odom_msg;
 imu_data_t* imu_msg;
 polar_laser_scan_t* scan_msg;
 system::ModuleCommunicator* communicator;
+int64_t imu_timestamp;                                  //Old imu timestamp in nano seconds 
 ros_wrapping()
 {
     ros::NodeHandle private_nh("~");
@@ -59,7 +60,8 @@ ros_wrapping()
     sub_imu = nh_.subscribe<sensor_msgs::Imu>("/imu", 1,  &ros_wrapping::imu_callback, this);
     sub_scan = nh_.subscribe<sensor_msgs::LaserScan>("/base_scan", 1,  &ros_wrapping::scan_callback, this);
     communicator = new system::ModuleCommunicator();
-    
+    imu_timestamp = -1;                               // No imu messahes received yet 
+    printf("Timestamp initialized as %ld \n", imu_timestamp);
 }
 
 ~ros_wrapping()
@@ -75,42 +77,54 @@ void scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
 void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
     odom_msg = new odometry_t();
-    odom_msg->timestamp = ros::WallTime::now().toNSec();        ///< Time at which the measurement was made
-    odom_msg->id = odom_msg->header.seq;                      ///< Monotonically increasing id so missing odometry can be easily identified
+    odom_msg->timestamp = ros::WallTime::now().toNSec()/1000;        ///< Time at which the measurement was made
+    odom_msg->id = msg->header.seq;                      ///< Monotonically increasing id so missing odometry can be easily identified
     odom_msg->x = msg->pose.pose.position.x;                   ///< Dead-reckoning x-position of the robot
     odom_msg->y = msg->pose.pose.position.y;                  ///< Dead-reckoning y-position of the robot
-    odom_msg->theta = msg->pose.pose.orientation.z;           ///< Dead-reckoning orientation of the robot
+    odom_msg->theta = msg->pose.pose.orientation.z;   //quat->z(angle in rad maybe, check?)        ///< Dead-reckoning orientation of the robot
     odom_msg->translation = msg->twist.twist.linear.x;    ///< Distance traveled between last measurement and this measurement
     odom_msg->rotation = msg->twist.twist.angular.z;       ///< Amount of rotation between last measurement and this measurement
+    communicator->sendMessage<odometry_t>   (*odom_msg);
 }
 
 void ros_wrapping::imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
+    int64_t timestamp = 0;
+    printf("Timestamp in callback as %ld \n", imu_timestamp);
+    if (imu_timestamp != -1)
+    {
+      timestamp = ros::WallTime::now().toNSec() - imu_timestamp;
+    }
+    else
+    {
+      printf("NULL msg detected");
+      timestamp = 0;
+    }
+    imu_timestamp = ros::WallTime::now().toNSec();
     imu_msg = new imu_data_t();
-    imu_msg->timestamp = ros::WallTime::now().toNSec();             ///< Time at which the IMU data was read (microseconds)
+    imu_msg->timestamp = imu_timestamp/1000;             ///< Time at which the IMU data was read (microseconds)
     imu_msg->sequenceNumber = msg->header.seq;       ///< Monotonically increasing number that identifies the particular measurement
     imu_msg->timeDelta = 0;              ///< Time difference between this reading and last reading in IMU data sequence (microseconds)
     imu_msg->acceleration[0] = msg->linear_acceleration.x;          ///< Measured acceleration values (x, y, z)
     imu_msg->acceleration[1] = msg->linear_acceleration.y;          ///< Measured acceleration values (x, y, z)
     imu_msg->acceleration[2] = msg->linear_acceleration.z;          ///< Measured acceleration values (x, y, z)
-    imu_msg->rotationalVelocity[0] = msg->angular_velocity.x;    ///< Measured rotational velocities (deltaYaw, deltaPitch, deltaRoll)
+    imu_msg->rotationalVelocity[0] = msg->angular_velocity.z;    ///< Measured rotational velocities (deltaYaw, deltaPitch, deltaRoll)
     imu_msg->rotationalVelocity[1] = msg->angular_velocity.y;    ///< Measured rotational velocities (deltaYaw, deltaPitch, deltaRoll)
-    imu_msg->rotationalVelocity[2] = msg->angular_velocity.z;    ///< Measured rotational velocities (deltaYaw, deltaPitch, deltaRoll)
-    imu_msg->orientation[0] = msg->orientation.x;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
+    imu_msg->rotationalVelocity[2] = msg->angular_velocity.x;    ///< Measured rotational velocities (deltaYaw, deltaPitch, deltaRoll)
+    imu_msg->orientation[0] = msg->orientation.z;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
     imu_msg->orientation[1] = msg->orientation.y;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
-    imu_msg->orientation[2] = msg->orientation.z;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
+    imu_msg->orientation[2] = msg->orientation.x;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
 
     imu_msg->gravityMagnitude = 9.8;
-    
+    communicator->sendMessage<imu_data_t>   (*imu_msg);
 }
 
 void ros_wrapping::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
     scan_msg = new polar_laser_scan_t();
-    printf("%ld \n",scan_msg->timestamp);
     scan_msg->laserId = 0;                    ///< Unique id assigned to the source laser --- guaranteed to start at 0 and be sequential for each new laser added
 
-    scan_msg->timestamp = ros::WallTime::now().toNSec();                  ///< Time at which the measurement was taken
+    scan_msg->timestamp = ros::WallTime::now().toNSec()/1000;                  ///< Time at which the measurement was taken
     scan_msg->scanId = msg->header.seq;                     ///< Monotonically increasing ID for the scans to allow multiple modules to sync on laser scans
 
     scan_msg->startAngle = msg->angle_min;                   ///< Angle the first range in the scan points, in laser coordinates
@@ -128,8 +142,6 @@ void ros_wrapping::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
     scan_msg->scanPeriod = msg->scan_time;           ///< Seconds per rotation of 2pi radians. Equivalent to 60/rpm of laser
     pose_6dof_t offset = pose_6dof_t();               ///< Offset of the rangefinder from the center of the robot coordinate frame
     scan_msg->offset = offset;
-    communicator->sendMessage<imu_data_t>   (*imu_msg);
-    communicator->sendMessage<odometry_t>   (*odom_msg);
     communicator->sendMessage<polar_laser_scan_t>   (*scan_msg, "SENSOR_LASER_FRONT_6DOF");
 }
 
