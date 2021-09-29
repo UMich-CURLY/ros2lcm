@@ -31,6 +31,9 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/LaserScan.h>
+#include <geometry_msgs/PoseWithCovariance.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Twist.h>
 
 namespace vulcan
 {
@@ -45,10 +48,14 @@ ros::NodeHandle nh_;
 ros::Subscriber sub_odom;
 ros::Subscriber sub_imu;
 ros::Subscriber sub_scan;
+ros::Subscriber sub_state_pos;
+ros::Subscriber sub_state_vel;
 
 odometry_t* odom_msg;
 imu_data_t* imu_msg;
 polar_laser_scan_t* scan_msg;
+motion_state_t* state_msg;
+velocity_t vel;
 system::ModuleCommunicator* communicator;
 int64_t imu_timestamp;                                  //Old imu timestamp in nano seconds 
 ros_wrapping()
@@ -59,8 +66,10 @@ ros_wrapping()
     sub_odom = nh_.subscribe<nav_msgs::Odometry>("/odom", 1,  &ros_wrapping::odom_callback, this);
     sub_imu = nh_.subscribe<sensor_msgs::Imu>("/imu", 1,  &ros_wrapping::imu_callback, this);
     sub_scan = nh_.subscribe<sensor_msgs::LaserScan>("/base_scan", 1,  &ros_wrapping::scan_callback, this);
+    sub_state_pos = nh_.subscribe<geometry_msgs::PoseWithCovariance>("/amcl_pose", 1,  &ros_wrapping::pose_callback, this);
+    sub_state_vel = nh_.subscribe<geometry_msgs::Twist>("/cmd_vel", 1,  &ros_wrapping::velocity_callback, this);
     communicator = new system::ModuleCommunicator();
-    imu_timestamp = -1;                               // No imu messahes received yet 
+    imu_timestamp = -1;                               // No imu messages received yet 
     printf("Timestamp initialized as %ld \n", imu_timestamp);
 }
 
@@ -72,6 +81,9 @@ ros_wrapping()
 void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
 void imu_callback(const sensor_msgs::Imu::ConstPtr& msg);
 void scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
+void pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg);
+void velocity_callback(const geometry_msgs::Twist::ConstPtr& msg);
+
 };
 
 void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -90,7 +102,7 @@ void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 void ros_wrapping::imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
     int64_t timestamp = 0;
-    printf("Timestamp in callback as %ld \n", imu_timestamp);
+
     if (imu_timestamp != -1)
     {
       timestamp = ros::WallTime::now().toNSec() - imu_timestamp;
@@ -104,7 +116,7 @@ void ros_wrapping::imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
     imu_msg = new imu_data_t();
     imu_msg->timestamp = imu_timestamp/1000;             ///< Time at which the IMU data was read (microseconds)
     imu_msg->sequenceNumber = msg->header.seq;       ///< Monotonically increasing number that identifies the particular measurement
-    imu_msg->timeDelta = 0;              ///< Time difference between this reading and last reading in IMU data sequence (microseconds)
+    imu_msg->timeDelta = timestamp/1000;              ///< Time difference between this reading and last reading in IMU data sequence (microseconds)
     imu_msg->acceleration[0] = msg->linear_acceleration.x;          ///< Measured acceleration values (x, y, z)
     imu_msg->acceleration[1] = msg->linear_acceleration.y;          ///< Measured acceleration values (x, y, z)
     imu_msg->acceleration[2] = msg->linear_acceleration.z;          ///< Measured acceleration values (x, y, z)
@@ -144,6 +156,25 @@ void ros_wrapping::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
     scan_msg->offset = offset;
     communicator->sendMessage<polar_laser_scan_t>   (*scan_msg, "SENSOR_LASER_FRONT_6DOF");
 }
+
+void ros_wrapping::pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg)
+{
+    printf("Inside pose Callback velocity = %f \n",vel.linear);
+    pose_t Pose;
+    Pose.timestamp = ros::WallTime::now().toNSec()/1000;
+    Pose.x = msg->pose.position.x;
+    Pose.y = msg->pose.position.y;
+    Pose.theta = msg->pose.orientation.z;
+    state_msg = new motion_state_t(Pose,vel);
+    communicator->sendMessage<motion_state_t>   (*state_msg);
+}
+void ros_wrapping::velocity_callback(const geometry_msgs::Twist::ConstPtr& msg)
+{
+    vel.timestamp = ros::WallTime::now().toNSec()/1000;
+    vel.linear = msg->linear.x;
+    vel.angular = msg->angular.z;
+}
+
 
 }
 }
