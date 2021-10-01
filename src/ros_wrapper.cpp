@@ -34,6 +34,7 @@
 #include <geometry_msgs/PoseWithCovariance.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
+#include <tf/transform_datatypes.h>
 
 namespace vulcan
 {
@@ -83,7 +84,7 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr& msg);
 void scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
 void pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg);
 void velocity_callback(const geometry_msgs::Twist::ConstPtr& msg);
-
+float get_rotation(const geometry_msgs::Quaternion quat);
 };
 
 void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -93,7 +94,7 @@ void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
     odom_msg->id = msg->header.seq;                      ///< Monotonically increasing id so missing odometry can be easily identified
     odom_msg->x = msg->pose.pose.position.x;                   ///< Dead-reckoning x-position of the robot
     odom_msg->y = msg->pose.pose.position.y;                  ///< Dead-reckoning y-position of the robot
-    odom_msg->theta = msg->pose.pose.orientation.z;   //quat->z(angle in rad maybe, check?)        ///< Dead-reckoning orientation of the robot
+    odom_msg->theta = get_rotation(msg->pose.pose.orientation);///< Dead-reckoning orientation of the robot
     odom_msg->translation = msg->twist.twist.linear.x;    ///< Distance traveled between last measurement and this measurement
     odom_msg->rotation = msg->twist.twist.angular.z;       ///< Amount of rotation between last measurement and this measurement
     communicator->sendMessage<odometry_t>   (*odom_msg);
@@ -123,10 +124,9 @@ void ros_wrapping::imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
     imu_msg->rotationalVelocity[0] = msg->angular_velocity.z;    ///< Measured rotational velocities (deltaYaw, deltaPitch, deltaRoll)
     imu_msg->rotationalVelocity[1] = msg->angular_velocity.y;    ///< Measured rotational velocities (deltaYaw, deltaPitch, deltaRoll)
     imu_msg->rotationalVelocity[2] = msg->angular_velocity.x;    ///< Measured rotational velocities (deltaYaw, deltaPitch, deltaRoll)
-    imu_msg->orientation[0] = msg->orientation.z;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
+    imu_msg->orientation[0] = odom_msg->theta;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
     imu_msg->orientation[1] = msg->orientation.y;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
     imu_msg->orientation[2] = msg->orientation.x;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
-
     imu_msg->gravityMagnitude = 9.8;
     communicator->sendMessage<imu_data_t>   (*imu_msg);
 }
@@ -174,10 +174,20 @@ void ros_wrapping::velocity_callback(const geometry_msgs::Twist::ConstPtr& msg)
     vel.linear = msg->linear.x;
     vel.angular = msg->angular.z;
 }
-
+float ros_wrapping::get_rotation(const geometry_msgs::Quaternion quat)
+{
+  tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
+  tf::Matrix3x3 m(q);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+  return yaw;
+}
 
 }
 }
+
+
+
 
 int main(int argc, char** argv)
 {
