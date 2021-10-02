@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   std_msgs
+  tf
 )
 message(STATUS "foo include dir: ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}")
 ## System dependencies are found with CMake's conventions
@@ -160,6 +161,13 @@ target_link_libraries(${PROJECT_NAME}_node
   ${PCL_LIBRARIES}
 )
 
+add_executable(get_pose_node src/gmapping_pose.cpp)
+target_link_libraries(get_pose_node 
+  ${catkin_LIBRARIES}
+  -Lbuild/lib
+  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system
+  ${PCL_LIBRARIES}
+)
 #############
 ## Install ##
 #############

@@ -127,7 +127,7 @@ void ros_wrapping::imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
     imu_msg->orientation[0] = odom_msg->theta;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
     imu_msg->orientation[1] = msg->orientation.y;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
     imu_msg->orientation[2] = msg->orientation.x;           ///< Estimate of the global orientation of the robot (yaw, pitch, roll)
-    imu_msg->gravityMagnitude = 9.8;
+    imu_msg->gravityMagnitude = 9.6;
     communicator->sendMessage<imu_data_t>   (*imu_msg);
 }
 
