@@ -21,14 +21,16 @@ void gmapping_pose::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
     geometry_msgs::PoseStamped pose;
     tf::Vector3 raw_position, transformed_position;
-    raw_position = tf::Vector3(msg->pose.pose.position.x,msg->pose.pose.position.y,msg->pose.pose.position.z);
+    // raw_position = tf::Vector3(msg->pose.pose.position.x,msg->pose.pose.position.y,msg->pose.pose.position.z);
+    raw_position = tf::Vector3(0.0,0.0,0.0);
     transformed_position = transform*raw_position;
     pose.pose.position.x = transformed_position.getX();                   ///< Dead-reckoning x-position of the robot
     pose.pose.position.y = transformed_position.getY();                  ///< Dead-reckoning y-position of the robot
     pose.pose.position.z = transformed_position.getZ();
 
     tf::Quaternion raw_quat, transformed_quat;
-    raw_quat = tf::Quaternion(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w);
+    // raw_quat = tf::Quaternion(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w);
+    raw_quat = tf::Quaternion(0.0,0.0,0.0,1.0);
     transformed_quat = transform*raw_quat;
     pose.pose.orientation.x = transformed_quat.getX();
     pose.pose.orientation.y = transformed_quat.getY();
@@ -60,7 +62,7 @@ int main(int argc, char** argv){
   while (object.n.ok()){
     
     try{
-      listener.lookupTransform("/odom", "/map",  
+      listener.lookupTransform("/map", "base_link",  
                                ros::Time(0), object.transform);
     }
     catch (tf::TransformException ex){

@@ -18,7 +18,14 @@
 <arg name="use_map_topic" value="$(arg use_map_topic)" />
 </include> -->
 
-<include file="$(find fetch_navigation)/launch/build_map.launch" />
+<!-- <include file="$(find fetch_navigation)/launch/build_map.launch" /> -->
+
+<node pkg="gmapping" type="slam_gmapping" name="gmapping_thing" output="screen" >
+  <remap from="scan" to="base_scan" />
+  <param name="odom_frame" value="odom" />
+  <param name="base_frame" value="base_link" />
+</node>
+
 
 <include file="$(arg gazebo_include)" >
 </include>
