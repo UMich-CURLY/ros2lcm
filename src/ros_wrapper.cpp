@@ -32,6 +32,7 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/PoseWithCovariance.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_datatypes.h>
@@ -51,6 +52,7 @@ ros::Subscriber sub_imu;
 ros::Subscriber sub_scan;
 ros::Subscriber sub_state_pos;
 ros::Subscriber sub_state_vel;
+ros::Subscriber sub_state_pos_gmapping;
 
 odometry_t* odom_msg;
 imu_data_t* imu_msg;
@@ -67,7 +69,8 @@ ros_wrapping()
     sub_odom = nh_.subscribe<nav_msgs::Odometry>("/odom", 1,  &ros_wrapping::odom_callback, this);
     sub_imu = nh_.subscribe<sensor_msgs::Imu>("/imu", 1,  &ros_wrapping::imu_callback, this);
     sub_scan = nh_.subscribe<sensor_msgs::LaserScan>("/base_scan", 1,  &ros_wrapping::scan_callback, this);
-    sub_state_pos = nh_.subscribe<geometry_msgs::PoseWithCovariance>("/amcl_pose", 1,  &ros_wrapping::pose_callback, this);
+    // sub_state_pos = nh_.subscribe<geometry_msgs::PoseWithCovariance>("/amcl_pose", 1,  &ros_wrapping::pose_callback, this);
+    sub_state_pos_gmapping = nh_.subscribe<geometry_msgs::PoseStamped>("/gmapping/pose", 1,  &ros_wrapping::gmapping_pose_callback, this);
     sub_state_vel = nh_.subscribe<geometry_msgs::Twist>("/cmd_vel", 1,  &ros_wrapping::velocity_callback, this);
     communicator = new system::ModuleCommunicator();
     imu_timestamp = -1;                               // No imu messages received yet 
@@ -85,6 +88,7 @@ void scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
 void pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg);
 void velocity_callback(const geometry_msgs::Twist::ConstPtr& msg);
 float get_rotation(const geometry_msgs::Quaternion quat);
+void gmapping_pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg);
 };
 
 void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -168,6 +172,19 @@ void ros_wrapping::pose_callback(const geometry_msgs::PoseWithCovariance::ConstP
     state_msg = new motion_state_t(Pose,vel);
     communicator->sendMessage<motion_state_t>   (*state_msg);
 }
+
+void ros_wrapping::gmapping_pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+    printf("Inside pose Callback velocity = %f \n",vel.linear);
+    pose_t Pose;
+    Pose.timestamp = ros::WallTime::now().toNSec()/1000;
+    Pose.x = msg->pose.position.x;
+    Pose.y = msg->pose.position.y;
+    Pose.theta = msg->pose.orientation.z;
+    state_msg = new motion_state_t(Pose,vel);
+    communicator->sendMessage<motion_state_t>   (*state_msg);
+}
+
 void ros_wrapping::velocity_callback(const geometry_msgs::Twist::ConstPtr& msg)
 {
     vel.timestamp = ros::WallTime::now().toNSec()/1000;

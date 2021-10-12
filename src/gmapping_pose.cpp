@@ -62,7 +62,7 @@ int main(int argc, char** argv){
   while (object.n.ok()){
     
     try{
-      listener.lookupTransform("/map", "base_link",  
+      listener.lookupTransform("map", "base_link",  
                                ros::Time(0), object.transform);
     }
     catch (tf::TransformException ex){

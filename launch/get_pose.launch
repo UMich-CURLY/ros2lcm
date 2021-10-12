@@ -5,10 +5,10 @@
 <arg name="map_topic" default="map" />
 <arg name="cmd_vel_topic" default="cmd_vel" />
 <arg name="odom_topic" default="odom" />
-<arg name="use_map_topic"  default="true" />
+<arg name="use_map_topic"  default="false" />
 <!-- 
 <arg name="amcl_include" default="$(find fetch_navigation)/launch/include/amcl.launch.xml" /> -->
-<arg name="gazebo_include" default="$(find fetch_gazebo)/launch/playground.launch" />
+<arg name="gazebo_include" default="$(find umma_navigation)/launch/gazebo_launch.launch" />
 
 
 <!-- localize the robot
@@ -27,11 +27,11 @@
 </node>
 
 
-<include file="$(arg gazebo_include)" >
-</include>
+<!-- <include file="$(arg gazebo_include)" >
+</include> -->
 
 <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ros2lcm)/compare_pose.rviz" />
 
 <!-- tilt the head -->
-  <node pkg="fetch_navigation" type="tilt_head.py" name="tilt_head_node" />
+  <!-- <node pkg="fetch_navigation" type="tilt_head.py" name="tilt_head_node" /> -->
 </launch>
