@@ -31,7 +31,7 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/LaserScan.h>
-#include <geometry_msgs/PoseWithCovariance.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
@@ -179,9 +179,10 @@ void ros_wrapping::gmapping_pose_callback(const geometry_msgs::PoseStamped::Cons
     pose_t Pose;
     Pose.timestamp = ros::WallTime::now().toNSec()/1000;
     Pose.x = msg->pose.position.x;
-    Pose.y = msg->pose.position.y;
-    Pose.theta = msg->pose.orientation.z;
-    state_msg = new motion_state_t(Pose,vel);
+    Pose.y = -msg->pose.position.y;
+    Pose.theta = get_rotation(msg->pose.orientation);
+    pose_distribution_t PoseDist = pose_distribution_t(Pose);
+    state_msg = new motion_state_t(PoseDist,vel);
     communicator->sendMessage<motion_state_t>   (*state_msg);
 }
 
