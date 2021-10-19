@@ -53,7 +53,7 @@ ros::Subscriber sub_scan;
 ros::Subscriber sub_state_pos;
 ros::Subscriber sub_state_vel;
 ros::Subscriber sub_state_pos_gmapping;
-
+pose_t Pose;
 odometry_t* odom_msg;
 imu_data_t* imu_msg;
 polar_laser_scan_t* scan_msg;
@@ -157,6 +157,12 @@ void ros_wrapping::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
     scan_msg->maxRange = msg->range_max;             ///< Maximum range that can be measured by the laser
     scan_msg->scanPeriod = msg->scan_time;           ///< Seconds per rotation of 2pi radians. Equivalent to 60/rpm of laser
     pose_6dof_t offset = pose_6dof_t();               ///< Offset of the rangefinder from the center of the robot coordinate frame
+    offset.x = 0.235;
+    offset.y = 0.00;
+    offset.z = 0.288;
+    offset.phi = 3.1415;
+    offset.rho = -0.00;
+    offset.theta = 3.1415;
     scan_msg->offset = offset;
     communicator->sendMessage<polar_laser_scan_t>   (*scan_msg, "SENSOR_LASER_FRONT_6DOF");
 }
@@ -176,10 +182,9 @@ void ros_wrapping::pose_callback(const geometry_msgs::PoseWithCovariance::ConstP
 void ros_wrapping::gmapping_pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
     printf("Inside pose Callback velocity = %f \n",vel.linear);
-    pose_t Pose;
     Pose.timestamp = ros::WallTime::now().toNSec()/1000;
     Pose.x = msg->pose.position.x;
-    Pose.y = -msg->pose.position.y;
+    Pose.y = msg->pose.position.y;
     Pose.theta = get_rotation(msg->pose.orientation);
     pose_distribution_t PoseDist = pose_distribution_t(Pose);
     state_msg = new motion_state_t(PoseDist,vel);

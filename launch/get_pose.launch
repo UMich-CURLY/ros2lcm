@@ -5,15 +5,15 @@
 <arg name="map_topic" default="map" />
 <arg name="cmd_vel_topic" default="cmd_vel" />
 <arg name="odom_topic" default="odom" />
-<arg name="use_map_topic"  default="false" />
-<!-- 
-<arg name="amcl_include" default="$(find fetch_navigation)/launch/include/amcl.launch.xml" /> -->
+<arg name="use_map_topic"  default="true" />
+
+<arg name="amcl_include" default="$(find fetch_navigation)/launch/include/amcl.launch.xml" />
 <!-- <arg name="gazebo_include" default="$(find umma_navigation)/launch/gazebo_launch.launch" /> -->
 <arg name="gazebo_include" default="$(find fetch_gazebo)/launch/playground.launch" />
 
 
-<!-- localize the robot
-<include file="$(arg amcl_include)" >
+<!-- localize the robot -->
+<!-- <include file="$(arg amcl_include)" >
 <arg name="scan_topic" value="$(arg scan_topic)" />
 <arg name="map_topic" value="$(arg map_topic)" />
 <arg name="use_map_topic" value="$(arg use_map_topic)" />
@@ -21,11 +21,11 @@
 
 <!-- <include file="$(find fetch_navigation)/launch/build_map.launch" /> -->
 
-<node pkg="gmapping" type="slam_gmapping" name="gmapping_thing" output="screen" >
+<!-- <node pkg="gmapping" type="slam_gmapping" name="gmapping_thing" output="screen" >
   <remap from="scan" to="base_scan" />
   <param name="odom_frame" value="odom" />
   <param name="base_frame" value="base_link" />
-</node>
+</node> -->
 
 
 <include file="$(arg gazebo_include)" >
