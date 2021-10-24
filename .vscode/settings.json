@@ -4,6 +4,7 @@
         "unordered_map": "cpp",
         "unordered_set": "cpp",
         "*.ipp": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "regex": "cpp"
     }
 }

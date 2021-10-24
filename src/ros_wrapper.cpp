@@ -70,7 +70,7 @@ ros_wrapping()
     sub_imu = nh_.subscribe<sensor_msgs::Imu>("/imu", 1,  &ros_wrapping::imu_callback, this);
     sub_scan = nh_.subscribe<sensor_msgs::LaserScan>("/base_scan", 1,  &ros_wrapping::scan_callback, this);
     // sub_state_pos = nh_.subscribe<geometry_msgs::PoseWithCovariance>("/amcl_pose", 1,  &ros_wrapping::pose_callback, this);
-    sub_state_pos_gmapping = nh_.subscribe<geometry_msgs::PoseStamped>("/gmapping/pose", 1,  &ros_wrapping::gmapping_pose_callback, this);
+    sub_state_pos_gmapping = nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/gmapping_pose", 1,  &ros_wrapping::gmapping_pose_callback, this);
     sub_state_vel = nh_.subscribe<geometry_msgs::Twist>("/cmd_vel", 1,  &ros_wrapping::velocity_callback, this);
     communicator = new system::ModuleCommunicator();
     imu_timestamp = -1;                               // No imu messages received yet 
@@ -88,7 +88,7 @@ void scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
 void pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg);
 void velocity_callback(const geometry_msgs::Twist::ConstPtr& msg);
 float get_rotation(const geometry_msgs::Quaternion quat);
-void gmapping_pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+void gmapping_pose_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
 };
 
 void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -157,12 +157,12 @@ void ros_wrapping::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
     scan_msg->maxRange = msg->range_max;             ///< Maximum range that can be measured by the laser
     scan_msg->scanPeriod = msg->scan_time;           ///< Seconds per rotation of 2pi radians. Equivalent to 60/rpm of laser
     pose_6dof_t offset = pose_6dof_t();               ///< Offset of the rangefinder from the center of the robot coordinate frame
-    offset.x = 0.235;
+    offset.x = 0.0    ;// 0.235;
     offset.y = 0.00;
-    offset.z = 0.288;
+    offset.z = 0.00  ;     //0.288;
     offset.phi = 3.1415;
-    offset.rho = -0.00;
-    offset.theta = 3.1415;
+    offset.rho = 0.00;
+    offset.theta = 0.00;
     scan_msg->offset = offset;
     communicator->sendMessage<polar_laser_scan_t>   (*scan_msg, "SENSOR_LASER_FRONT_6DOF");
 }
@@ -173,19 +173,19 @@ void ros_wrapping::pose_callback(const geometry_msgs::PoseWithCovariance::ConstP
     pose_t Pose;
     Pose.timestamp = ros::WallTime::now().toNSec()/1000;
     Pose.x = msg->pose.position.x;
-    Pose.y = msg->pose.position.y;
+    Pose.y = -msg->pose.position.y;
     Pose.theta = msg->pose.orientation.z;
     state_msg = new motion_state_t(Pose,vel);
     communicator->sendMessage<motion_state_t>   (*state_msg);
 }
 
-void ros_wrapping::gmapping_pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+void ros_wrapping::gmapping_pose_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
     printf("Inside pose Callback velocity = %f \n",vel.linear);
     Pose.timestamp = ros::WallTime::now().toNSec()/1000;
-    Pose.x = msg->pose.position.x;
-    Pose.y = msg->pose.position.y;
-    Pose.theta = get_rotation(msg->pose.orientation);
+    Pose.x = msg->pose.pose.position.x;
+    Pose.y = -msg->pose.pose.position.y;
+    Pose.theta = get_rotation(msg->pose.pose.orientation)+3.1415/2;
     pose_distribution_t PoseDist = pose_distribution_t(Pose);
     state_msg = new motion_state_t(PoseDist,vel);
     communicator->sendMessage<motion_state_t>   (*state_msg);

@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /PoseWithCovariance1
+        - /Pose2
       Splitter Ratio: 0.5
     Tree Height: 1079
   - Class: rviz/Selection
@@ -81,7 +82,7 @@ Visualization Manager:
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Arrow
-      Topic: /amcl_pose
+      Topic: /gmapping_pose
       Unreliable: false
       Value: true
     - Alpha: 0.699999988079071
@@ -131,7 +132,7 @@ Visualization Manager:
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz/Pose
-      Color: 255; 25; 0
+      Color: 138; 226; 52
       Enabled: true
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
@@ -140,7 +141,7 @@ Visualization Manager:
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Arrow
-      Topic: /gmapping/pose
+      Topic: /move_base/current_goal
       Unreliable: false
       Value: true
   Enabled: true
