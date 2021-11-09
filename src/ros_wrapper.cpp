@@ -162,7 +162,7 @@ void ros_wrapping::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
     offset.z = 0.00  ;     //0.288;
     offset.phi = 3.1415;
     offset.rho = 0.00;
-    offset.theta = 0.00;
+    offset.theta = 3.1415;
     scan_msg->offset = offset;
     communicator->sendMessage<polar_laser_scan_t>   (*scan_msg, "SENSOR_LASER_FRONT_6DOF");
 }
@@ -183,10 +183,11 @@ void ros_wrapping::gmapping_pose_callback(const geometry_msgs::PoseWithCovarianc
 {
     printf("Inside pose Callback velocity = %f \n",vel.linear);
     Pose.timestamp = ros::WallTime::now().toNSec()/1000;
-    Pose.x = msg->pose.pose.position.x;
-    Pose.y = -msg->pose.pose.position.y;
+    Pose.x = -msg->pose.pose.position.y;
+    Pose.y = msg->pose.pose.position.x;
     Pose.theta = get_rotation(msg->pose.pose.orientation)+3.1415/2;
-    pose_distribution_t PoseDist = pose_distribution_t(Pose);
+    // Pose.theta = get_rotation(msg->pose.pose.orientation);
+	pose_distribution_t PoseDist = pose_distribution_t(Pose);
     state_msg = new motion_state_t(PoseDist,vel);
     communicator->sendMessage<motion_state_t>   (*state_msg);
 }
