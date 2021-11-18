@@ -29,8 +29,8 @@
 </node>
 
 
-<!-- <include file="$(arg gazebo_include)" > -->
-</include>
+<!-- <include file="$(arg gazebo_include)" >
+</include> -->
 
 <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ros2lcm)/compare_pose.rviz" /> -->
 
