@@ -9,7 +9,7 @@
 
 <arg name="amcl_include" default="$(find fetch_navigation)/launch/include/amcl.launch.xml" />
 <!-- <arg name="gazebo_include" default="$(find umma_navigation)/launch/gazebo_launch.launch" /> -->
-<arg name="gazebo_include" default="$(find fetch_gazebo)/launch/museum.launch" />
+<!-- <arg name="gazebo_include" default="$(find fetch_gazebo)/launch/museum.launch" /> -->
 <arg name="move_base_include" default="$(find umma_navigation)/launch/include/move_base_sim.launch.xml" />
 
 
@@ -29,7 +29,7 @@
 </node>
 
 
-<include file="$(arg gazebo_include)" >
+<!-- <include file="$(arg gazebo_include)" > -->
 </include>
 
 <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ros2lcm)/compare_pose.rviz" /> -->
