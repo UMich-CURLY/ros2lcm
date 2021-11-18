@@ -32,7 +32,7 @@
 <!-- <include file="$(arg gazebo_include)" >
 </include> -->
 
-<!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ros2lcm)/compare_pose.rviz" /> -->
+<node type="rviz" name="rviz" pkg="rviz" args="-d $(find ros2lcm)/compare_pose.rviz" />
 
 <!-- generate cost map -->
   <node pkg="move_base" type="move_base" name="move_base" respawn="true" output="screen">
