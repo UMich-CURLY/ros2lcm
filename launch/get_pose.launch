@@ -26,6 +26,9 @@
   <remap from="scan" to="base_scan" />
   <param name="odom_frame" value="odom" />
   <param name="base_frame" value="base_link" />
+  <param name="linearUpdate" value="0.1" />
+  <param name="angularUpdate" value="0.05" />
+  <param name="temporalUpdate" value="0.5" />
 </node>
 
 
