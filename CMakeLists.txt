@@ -143,6 +143,8 @@ link_directories(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/src/Vulcan/build/lib)
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/ros_wrapper.cpp)
 
+add_executable(lcm2ros_node src/lcm2ros.cpp)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -157,7 +159,14 @@ add_executable(${PROJECT_NAME}_node src/ros_wrapper.cpp)
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   -Lbuild/lib
-  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system
+  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system 
+  ${PCL_LIBRARIES}
+)
+
+target_link_libraries(lcm2ros_node
+  ${catkin_LIBRARIES}
+  -Lbuild/lib
+  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system -llocal_topo_hssh_data
   ${PCL_LIBRARIES}
 )
 
@@ -166,6 +175,15 @@ target_link_libraries(get_pose_node
   ${catkin_LIBRARIES}
   -Lbuild/lib
   -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system
+  ${PCL_LIBRARIES}
+)
+
+add_executable(path_node src/path_planner.cpp)
+target_link_libraries(path_node 
+  ${catkin_LIBRARIES}
+  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system 
+  -llocal_topo_hssh_data
+  -Lbuild/lib
   ${PCL_LIBRARIES}
 )
 #############
