@@ -13,18 +13,25 @@
 *
 * Definition of MetricSLAMDataQueue.
 */
-
+#include <hssh/local_metric/lpm_io.h>
+#include <hssh/local_metric/lpm.h>
+#include <hssh/local_metric/pose.h>
+#include <vision/image_utils.h>
+#include <visualization_msgs/Marker.h>
 // #include <hssh/metrical/data_queue.h>
 // #include <hssh/metrical/data.h>
 // #include <laser/line_extraction.h>
 // #include <laser/line_extractor_params.h>
 #include <core/imu_data.h>
 #include <core/odometry.h>
+#include <core/landmark.h>
+// #include <core/point.h>
 // #include <core/laser_scan.h>
 #include <core/motion_state.h>
 #include <system/module_communicator.h>
 // #include <utils/algorithm_ext.h>
 // #include <utils/auto_mutex.h>
+#include <nav_msgs/GetMap.h>
 #include <utils/timestamp.h>
 #include <cassert>
 #include <ros/ros.h>
@@ -53,6 +60,16 @@ ros::Subscriber sub_scan;
 ros::Subscriber sub_state_pos;
 ros::Subscriber sub_state_vel;
 ros::Subscriber sub_state_pos_gmapping;
+ros::Subscriber sub_state_pos_odometry;
+ros::Subscriber sub_map;
+ros::Subscriber sub_marker;
+
+ros::Publisher pub_pose;
+
+LocalPerceptualMap* lpm;
+image_import_properties_t properties;
+// tf::TransformListener tf;
+landmark_t* landmark_pose;
 pose_t Pose;
 odometry_t* odom_msg;
 imu_data_t* imu_msg;
@@ -67,14 +84,23 @@ ros_wrapping()
     // if(!lcm.good())
     //     ros::shutdown();
     sub_odom = nh_.subscribe<nav_msgs::Odometry>("/odom", 1,  &ros_wrapping::odom_callback, this);
+
     sub_imu = nh_.subscribe<sensor_msgs::Imu>("/imu", 1,  &ros_wrapping::imu_callback, this);
     sub_scan = nh_.subscribe<sensor_msgs::LaserScan>("/base_scan", 1,  &ros_wrapping::scan_callback, this);
+
+    sub_marker = nh_.subscribe<visualization_msgs::Marker>("/raw_marker", 1, &ros_wrapping::marker_callback, this);
+
     // sub_state_pos = nh_.subscribe<geometry_msgs::PoseWithCovariance>("/amcl_pose", 1,  &ros_wrapping::pose_callback, this);
     sub_state_pos_gmapping = nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/gmapping_pose", 1,  &ros_wrapping::gmapping_pose_callback, this);
+    // sub_state_pos_odometry = nh_.subscribe<nav_msgs::Odometry>("/odom", 1,  &ros_wrapping::odometry_pose_callback, this);
     sub_state_vel = nh_.subscribe<geometry_msgs::Twist>("/cmd_vel", 1,  &ros_wrapping::velocity_callback, this);
     communicator = new system::ModuleCommunicator();
+    sub_map = nh_.subscribe<nav_msgs::OccupancyGrid>("/map", 1, &ros_wrapping::mapCallback, this);
+
+    pub_pose = nh_.advertise<visualization_msgs::Marker>("/raw_marker",1000);
     imu_timestamp = -1;                               // No imu messages received yet 
     printf("Timestamp initialized as %ld \n", imu_timestamp);
+
 }
 
 ~ros_wrapping()
@@ -85,11 +111,61 @@ ros_wrapping()
 void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
 void imu_callback(const sensor_msgs::Imu::ConstPtr& msg);
 void scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
-void pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg);
+// void pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg);
 void velocity_callback(const geometry_msgs::Twist::ConstPtr& msg);
 float get_rotation(const geometry_msgs::Quaternion quat);
+// void odometry_pose_callback(const nav_msgs::Odometry::ConstPtr& msg);
 void gmapping_pose_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
+void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& map);
+void marker_callback(const visualization_msgs::Marker::ConstPtr& msg);
 };
+
+
+
+void ros_wrapping::marker_callback(const visualization_msgs::Marker::ConstPtr& msg){
+    landmark_pose = new landmark_t();
+    // landmark_pose->timestamp = ros::WallTime::now().toNSec()/1000;        ///< Time at which the measurement was made
+    // landmark_pose->id = msg->header.seq;                      ///< Monotonically increasing id so missing odometry can be easily identified
+    landmark_pose->x = msg->pose.position.x;                   ///< Dead-reckoning x-position of the robot
+    landmark_pose->y = msg->pose.position.y;                  ///< Dead-reckoning y-position of the robot
+    std::cout<<"X: "<<landmark_pose->x<<" Y: "<<landmark_pose->y<<std::endl;
+    communicator->sendMessage<landmark_t>(*landmark_pose, "LANDMARK_POSE");
+}
+
+
+void ros_wrapping::mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& map){
+    lpm =new hssh::LocalPerceptualMap();
+    // std::cout<<"Into mapCallback"<<std::endl;
+    float scale = map->info.resolution;
+    float threshold_free_ = 25;
+    float threshold_occupied_ = 65;
+
+    lpm->setMetersPerCell(scale);
+    lpm->setGridSizeInCells(map->info.width, map->info.height);
+    lpm->reset();
+    // std::cout<<"After reset"<<std::endl;
+
+    for(unsigned int y = 0; y < map->info.height; y++) {
+        for(unsigned int x = 0; x < map->info.width; x++) {
+          unsigned int i = x + (map->info.height - y - 1) * map->info.width;
+          if (map->data[i] >= 0 && map->data[i] <= threshold_free_) { // [0,free)
+                lpm->setCostNoCheck(Point<int>(x, y), lpm->getMaxCellCost());
+                // std::cout<<"getTimestamp: "<<lpm->getTimestamp()<<std::endl;
+                lpm->setTypeNoCheck(Point<int>(x, y), kOccupiedOccGridCell);
+          } else if (map->data[i] >= threshold_occupied_) { // (occ,255]
+                lpm->setCostNoCheck(Point<int>(x, y), 0);
+                lpm->setTypeNoCheck(Point<int>(x, y), kFreeOccGridCell);
+          }
+        }
+    }
+    // std::cout<<"LPM: "<<lpm->getReferenceFrameIndex()<<std::endl;
+    if(&lpm){
+        communicator->sendMessage<LocalPerceptualMap>(*lpm, "The map");
+        // std::cout<<"After reset"<<std::endl;
+    }
+}
+
+
 
 void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
@@ -101,6 +177,14 @@ void ros_wrapping::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
     odom_msg->theta = get_rotation(msg->pose.pose.orientation);///< Dead-reckoning orientation of the robot
     odom_msg->translation = msg->twist.twist.linear.x;    ///< Distance traveled between last measurement and this measurement
     odom_msg->rotation = msg->twist.twist.angular.z;       ///< Amount of rotation between last measurement and this measurement
+    // tf::StampedTransform transform;
+
+    // tf.lookupTransform("map","odom",ros::Time(10),transform);
+    // tf.transformPose("odom",)
+
+
+    vel.linear = odom_msg->translation;
+    vel.angular = odom_msg->rotation;
     communicator->sendMessage<odometry_t>   (*odom_msg);
 }
 
@@ -167,36 +251,58 @@ void ros_wrapping::scan_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
     communicator->sendMessage<polar_laser_scan_t>   (*scan_msg, "SENSOR_LASER_FRONT_6DOF");
 }
 
-void ros_wrapping::pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg)
-{
-    printf("Inside pose Callback velocity = %f \n",vel.linear);
-    pose_t Pose;
-    Pose.timestamp = ros::WallTime::now().toNSec()/1000;
-    Pose.x = msg->pose.position.x;
-    Pose.y = -msg->pose.position.y;
-    Pose.theta = msg->pose.orientation.z;
-    state_msg = new motion_state_t(Pose,vel);
-    communicator->sendMessage<motion_state_t>   (*state_msg);
-}
+// void ros_wrapping::pose_callback(const geometry_msgs::PoseWithCovariance::ConstPtr& msg)
+// {
+//     printf("Inside pose Callback velocity = %f \n",vel.linear);
+//     pose_t Pose;
+//     Pose.timestamp = ros::WallTime::now().toNSec()/1000;
+//     Pose.x = msg->pose.position.x;
+//     Pose.y = -msg->pose.position.y;
+//     Pose.theta = msg->pose.orientation.z;
+//     state_msg = new motion_state_t(Pose,vel);
+//     communicator->sendMessage<motion_state_t>   (*state_msg);
+// }
 
 void ros_wrapping::gmapping_pose_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
     printf("Inside pose Callback velocity = %f \n",vel.linear);
     Pose.timestamp = ros::WallTime::now().toNSec()/1000;
-    Pose.x = -msg->pose.pose.position.y;
-    Pose.y = msg->pose.pose.position.x;
-    Pose.theta = get_rotation(msg->pose.pose.orientation)+3.1415/2;
+    Pose.x = msg->pose.pose.position.x;
+    Pose.y = msg->pose.pose.position.y;
+    Pose.theta = get_rotation(msg->pose.pose.orientation);
     // Pose.theta = get_rotation(msg->pose.pose.orientation);
 	pose_distribution_t PoseDist = pose_distribution_t(Pose);
     state_msg = new motion_state_t(PoseDist,vel);
     communicator->sendMessage<motion_state_t>   (*state_msg);
+    // std::cout<<"PoseDist: "<<PoseDist.x<<std::endl;
+
+    // currentPoseDistribution = PoseDist;
+    // lpm->changeReferenceFrame(Pose);
+    // std::cout<<"lpm->getReferenceFrameIndex(): "<<lpm->getReferenceFrameIndex()<<std::endl;
+    // std::cout<<"LocalPose(PoseDist, lpm->getReferenceFrameIndex())"<<LocalPose(PoseDist, lpm->getReferenceFrameIndex()).pose().x<<std::endl;
+    // communicator->sendMessage(LocalPose(PoseDist, lpm->getReferenceFrameIndex()));
+
 }
+
+// void ros_wrapping::odometry_pose_callback(const nav_msgs::Odometry::ConstPtr& msg)
+// {
+//     printf("Inside pose Callback velocity = %f \n",vel.linear);
+//     Pose.timestamp = ros::WallTime::now().toNSec()/1000;
+
+//     Pose.x = msg->pose.pose.position.x;
+//     Pose.y = msg->pose.pose.position.y;
+//     Pose.theta = get_rotation(msg->pose.pose.orientation);
+//     // Pose.theta = get_rotation(msg->pose.pose.orientation);
+//     pose_distribution_t PoseDist = pose_distribution_t(Pose);
+//     state_msg = new motion_state_t(PoseDist,vel);
+//     communicator->sendMessage<motion_state_t>   (*state_msg);
+// }
 
 void ros_wrapping::velocity_callback(const geometry_msgs::Twist::ConstPtr& msg)
 {
     vel.timestamp = ros::WallTime::now().toNSec()/1000;
-    vel.linear = msg->linear.x;
-    vel.angular = msg->angular.z;
+    // vel.linear = msg->linear.x;
+    // vel.angular = msg->angular.z;
 }
 float ros_wrapping::get_rotation(const geometry_msgs::Quaternion quat)
 {
@@ -221,6 +327,15 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "lcm_republisher");
   
   ros_wrapping roswrapper;
+
+  // visualization_msgs::Marker marker_test;
+  // marker_test.pose.position.x = 700;
+  // marker_test.pose.position.y = 600;
+  // ros::Rate loop_rate(10);
+  // while(ros::ok()){
+  //     roswrapper.pub_pose.publish(marker_test);
+  //     loop_rate.sleep();
+  // }
   ros::spin();
   
   return 0;

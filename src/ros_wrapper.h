@@ -15,7 +15,7 @@
 #include <cassert>
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
-
+#include <nav_msgs/GetMap.h>
 
 namespace vulcan
 {
@@ -29,7 +29,7 @@ public:
 ros::NodeHandle nh_;
 ros::Subscriber sub_;
 
-ros_wrapping()
+ros_wrapping();
 
 }
 }
