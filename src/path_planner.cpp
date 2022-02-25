@@ -50,7 +50,6 @@ bool path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response&
 
     res.plan.poses.push_back(path_pose);
 
-
     for(auto& visit : path)
     {   
 
@@ -58,6 +57,8 @@ bool path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response&
         path_pose.pose.position.y = visit.exitPoint().y - 61.350861;
         res.plan.poses.push_back(path_pose);
     }
+
+
     res.plan.header.frame_id = "map";
 
     return true;
