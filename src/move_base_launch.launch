@@ -1,0 +1,19 @@
+<launch>
+
+   <arg name="map_path" default="$(find ros2lcm)/data/maps/new_env.yaml"/>
+
+   <master auto="start"/>
+
+   <!-- Run the map server -->
+   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_path)"/>
+
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+
+      <rosparam file="$(find ros2lcm)/navigation_params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find ros2lcm)/navigation_params/costmap_common_params.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find ros2lcm)/navigation_params/local_costmap_params.yaml" command="load" />
+      <rosparam file="$(find ros2lcm)/navigation_params/global_costmap_params.yaml" command="load" />
+      <rosparam file="$(find ros2lcm)/navigation_params/base_local_planner_params.yaml" command="load" />
+   </node>
+
+   </launch>

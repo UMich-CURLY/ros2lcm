@@ -24,7 +24,6 @@ bool path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response&
 path_planner(const LocalTopoMap& map): topoMap(map), graph(LocalTopoGraph(map))
 {
     G = graph.getGraph();
-
 }
 
 ~path_planner()
