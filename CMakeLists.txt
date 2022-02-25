@@ -186,6 +186,24 @@ target_link_libraries(path_node
   -Lbuild/lib
   ${PCL_LIBRARIES}
 )
+
+add_executable(distance_node src/distance_planner.cpp)
+target_link_libraries(distance_node 
+  ${catkin_LIBRARIES}
+  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system 
+  -llocal_topo_hssh_data
+  -Lbuild/lib
+  ${PCL_LIBRARIES}
+)
+
+add_executable(service_node src/service_class.cpp)
+target_link_libraries(service_node 
+  ${catkin_LIBRARIES}
+  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system 
+  -llocal_topo_hssh_data
+  -Lbuild/lib
+  ${PCL_LIBRARIES}
+)
 #############
 ## Install ##
 #############
