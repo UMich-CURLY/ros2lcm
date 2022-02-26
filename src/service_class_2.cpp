@@ -38,7 +38,6 @@ path_planner(const LocalTopoMap& map, ros::ServiceClient& client_): topoMap(map)
     boost::graph_traits<LTGraphType>::edge_iterator e_it, e_end;
     for(std::tie(e_it, e_end) = boost::edges(G); e_it != e_end; ++e_it)
     {   
-
         auto start_position = position[boost::source(*e_it, G)];
         auto goal_position = position[boost::target(*e_it, G)];
 
@@ -56,14 +55,14 @@ path_planner(const LocalTopoMap& map, ros::ServiceClient& client_): topoMap(map)
         start_msg.pose.position.x = start_position.x;
         start_msg.pose.position.y = start_position.y;
 
+        goal_msg.header.frame_id = "map";
+        goal_msg.header.stamp = ros::Time();
+
         goal_msg.pose.position.x = goal_position.x;
         goal_msg.pose.position.y = goal_position.y;
 
         nav_msgs::GetPlan srv;
         
-        if(client.call(srv)){
-            ROS_INFO("Called the A* service!!!!");
-        }
 
         srv.request.start = start_msg;
         srv.request.goal = goal_msg;
@@ -71,7 +70,7 @@ path_planner(const LocalTopoMap& map, ros::ServiceClient& client_): topoMap(map)
 
         std::cout<< "Topic of service: "<<client.getService()<<std::endl;
         std::cout<< "Active? "<<client.exists()<<std::endl;
-        if(client.call(srv)){
+        if(client.call(srv.request,srv.response)){
             ROS_INFO("Called the A* service!!!!");
         }
 
@@ -81,16 +80,84 @@ path_planner(const LocalTopoMap& map, ros::ServiceClient& client_): topoMap(map)
         }
 
         // ROS_INFO("Changing distance");
-        distance[*e_it] = sum_;
+        distance[*e_it] = 1.0;
 
-        // std::cout<<start_position << "-" << distance[*e_it]<<"-"<<goal_position<<std::endl;
+        std::cout<<start_position << "-" << distance[*e_it]<<"-"<<goal_position<<std::endl;
+
     }
 
     ROS_INFO("END OF CALLING MOVE_BASE TO UPDATE");
 
-
+    graph.setGraph(G);
+    graph.getskeletonGraph();
 }
 
+
+// path_planner(const LocalTopoMap& map, ros::ServiceClient& client_): topoMap(map), client(client_)
+// {
+//     ROS_INFO("Into path_planner");
+//      std::unordered_map<int, LTGraphType::vertex_descriptor> gatewayToVertex;
+
+//     // For each area, create vertices for the gateways and add edges between each pair of gateways
+//     for(auto& area : topoMap)
+//     {
+//         std::vector<Gateway> areaGateways = area->gateways();
+
+//         // Add all gateways
+//         for(const auto& g : areaGateways)
+//         {
+//             // Validate that we haven't loaded some degenerate gateway
+//             auto path = path_to_skeleton(g.skeletonCell(), SKELETON_CELL_REDUCED_SKELETON, topoMap.voronoiSkeleton());
+//             print(path)
+//             // Ignore any gateways for which a proper path to the skeleton can't be found.
+//             if(path.result != VoronoiPathResult::success)
+//             {
+//                 continue;
+//             }
+
+//             if(gatewayToVertex.find(g.id()) == gatewayToVertex.end())
+//             {
+//                 LTGVertex vertex;
+//                 vertex.position = g.center();
+//                 vertex.gatewayId = g.id();
+//                 gatewayToVertex[g.id()] = boost::add_vertex(vertex, graph_);
+//                 gateways_[g.id()] = g;
+//             }
+
+//             areaVertices_[area->id()].push_back(gatewayToVertex[g.id()]);
+//         }
+
+//         // Add an edge between all pairs of gateways
+//         for(std::size_t n = 0; n < areaGateways.size(); ++n)
+//         {
+//             for(std::size_t i = n + 1; i < areaGateways.size(); ++i)
+//             {
+//                 LTGEdge edge;
+//                 edge.areaId = area->id();
+
+//                 // Find the path between the gateways
+//                 auto path = find_path_along_skeleton(areaGateways[n].skeletonCell(),
+//                                                      areaGateways[i].skeletonCell(),
+//                                                      SKELETON_CELL_REDUCED_SKELETON,
+//                                                      topoMap.voronoiSkeleton());
+
+//                 if(path.result == VoronoiPathResult::success)
+//                 {
+//                     edge.distance = path.length;
+//                     boost::add_edge(gatewayToVertex.at(areaGateways[n].id()),
+//                                     gatewayToVertex.at(areaGateways[i].id()),
+//                                     edge,
+//                                     graph_);
+//                 }
+//                 else
+//                 {
+//                     std::cerr << "ERROR: LocalTopoGraph: Failed to find path between gateways: "
+//                         << areaGateways[n] << " to " << areaGateways[i] << " in " << area->id() << '\n';
+//                 }
+//             }
+//         }
+//     }
+// }
 ~path_planner()
 {
 
@@ -109,7 +176,7 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
 
     std::pair<Point<double>, int> start_node(start_pose, start->id());
     std::pair<Point<double>, int> goal_node(goal_pose, end->id());
-
+    // graph.getskeletonGraph();
     LocalTopoRoute path = graph.findPath(start_node,goal_node);
 
     geometry_msgs::PoseStamped path_pose;
@@ -131,7 +198,7 @@ int main(int argc, char** argv)
     ros::NodeHandle nh_;
     ros::NodeHandle private_nh("~");
     hssh::LocalTopoMap topoMap;
-    if(!utils::load_serializable_from_file("/root/catkin_ws/src/ros2lcm/src/Vulcan/build/bin/new_env_laser.ltm", topoMap))
+    if(!utils::load_serializable_from_file("/mnt/Sauna/new_env_laser.ltm", topoMap))
         {
             std::cerr << "ERROR:LocalTopoPanel: Failed to load topo map to file " << '\n';
         } 
