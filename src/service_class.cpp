@@ -12,6 +12,10 @@
 #include <hssh/local_topological/area.h>
 #include <hssh/local_topological/area_detection/voronoi/search.h>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 using namespace vulcan;
 using namespace vulcan::system;
 using namespace vulcan::hssh;
@@ -55,11 +59,25 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
                                          topoMap.voronoiSkeleton());
     // std::vector<Point<double>> global_path;
     // for(auto& cell : path.cells){
-    for(int i=0;i < path.cells.size(); i++){
-        auto global_point = utils::grid_point_to_global_point(path.cells[i],topoMap.voronoiSkeleton());
+    tf2::Quaternion myQuaternion;
+    for(int i=0;i < path.cells.size() - 1; i++){
+
+        auto global_point_current = utils::grid_point_to_global_point(path.cells[i],topoMap.voronoiSkeleton());
+        auto global_point_next = utils::grid_point_to_global_point(path.cells[i + 1], topoMap.voronoiSkeleton());
         geometry_msgs::PoseStamped path_pose;
-        path_pose.pose.position.x = global_point.x - 18.713085;
-        path_pose.pose.position.y = global_point.y - 61.350861;
+        path_pose.pose.position.x = global_point_current.x - 18.713085;
+        path_pose.pose.position.y = global_point_current.y - 61.350861;
+
+        double delta_y = global_point_next.y - global_point_current.y;
+        double delta_x = global_point_next.x - global_point_current.x;
+
+        double angle = atan2(delta_y,delta_x);
+
+        myQuaternion.setRPY( 0, 0, angle );
+
+        myQuaternion.normalize();
+
+        path_pose.pose.orientation = tf2::toMsg(myQuaternion);
 
         path_pose.header.frame_id = "map";
         res.plan.poses.push_back(path_pose);
@@ -98,13 +116,32 @@ int main(int argc, char** argv)
                                          utils::global_point_to_grid_cell_round(goal_node.first, topoMap.voronoiSkeleton()),
                                          SKELETON_CELL_REDUCED_SKELETON,
                                          topoMap.voronoiSkeleton());
-    std::vector<Point<double>> global_path;
-    for(auto& cell : path.cells){
-        auto global_point = utils::grid_point_to_global_point(cell,topoMap.voronoiSkeleton());
-        global_path.push_back(global_point);
-        std::cout<<global_point<<std::endl;
-    }
+    // std::vector<Point<double>> global_path;
+    tf2::Quaternion myQuaternion;
+    for(int i=0;i < path.cells.size() - 1; i++){
 
+        auto global_point_current = utils::grid_point_to_global_point(path.cells[i],topoMap.voronoiSkeleton());
+        auto global_point_next = utils::grid_point_to_global_point(path.cells[i + 1], topoMap.voronoiSkeleton());
+        geometry_msgs::PoseStamped path_pose;
+        path_pose.pose.position.x = global_point_current.x - 18.713085;
+        path_pose.pose.position.y = global_point_current.y - 61.350861;
+
+        double delta_y = global_point_next.y - global_point_current.y;
+        double delta_x = global_point_next.x - global_point_current.x;
+
+        double angle = atan2(delta_y,delta_x);
+
+        myQuaternion.setRPY( 0, 0, angle );
+
+        myQuaternion.normalize();
+
+        path_pose.pose.orientation = tf2::toMsg(myQuaternion);
+
+        path_pose.header.frame_id = "map";
+        // res.plan.poses.push_back(path_pose);
+        // std::cout<<global_point<<std::endl;
+        std::cout<<path_pose.pose.orientation<<std::endl;
+    }
     ros::ServiceServer service = nh_.advertiseService("/plan_path", &path_planner::path_callback, &planner);
     ros::spin();
   

@@ -91,7 +91,7 @@ path_planner(const LocalTopoMap& map, ros::ServiceClient& client_): topoMap(map)
 
     ROS_INFO("END OF CALLING MOVE_BASE TO UPDATE");
 
-    graph.setGraph(G);
+    // graph.setGraph(G);
     graph.getskeletonGraph();
 }
 

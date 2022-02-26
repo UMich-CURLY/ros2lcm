@@ -8,7 +8,7 @@
  //register this planner as a BaseGlobalPlanner plugin
  PLUGINLIB_EXPORT_CLASS(global_planner_tribhi::GlobalPlanner, nav_core::BaseGlobalPlanner)
 
- using namespace std;
+using namespace std;
 using namespace vulcan;
 using namespace vulcan::system;
 using namespace vulcan::hssh;
@@ -42,6 +42,12 @@ namespace global_planner_tribhi{
  void GlobalPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros){
 
   if(!initialized_){
+      if(!utils::load_serializable_from_file("/root/catkin_ws/src/ros2lcm/src/Vulcan/build/bin/new_env_laser.ltm", topoMap))
+        {
+            std::cerr << "ERROR:LocalTopoPanel: Failed to load topo map to file " << '\n';
+        } 
+
+
       costmap_ros_ = costmap_ros;
       costmap_ = costmap_ros_->getCostmap();
 
@@ -55,108 +61,61 @@ namespace global_planner_tribhi{
  }
 
 
-double GlobalPlanner::getYawFromQuat(geometry_msgs::Quaternion quat)
-    {
-        tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
-        tf::Matrix3x3 m(q);
-        double roll, pitch, yaw;
-        m.getRPY(roll, pitch, yaw);
+// double GlobalPlanner::getYawFromQuat(geometry_msgs::Quaternion quat)
+//     {
+//         tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
+//         tf::Matrix3x3 m(q);
+//         double roll, pitch, yaw;
+//         m.getRPY(roll, pitch, yaw);
 
-        return yaw;
+//         return yaw;
+//     }
+
+ bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start_, const geometry_msgs::PoseStamped& goal,  std::vector<geometry_msgs::PoseStamped>& plan ){
+
+    // LocalTopoGraph graph(topoMap);
+    // LTGraphType G = graph.getGraph();
+
+    Point<double> start_pose(start_.pose.position.x + 18.713085, start_.pose.position.y + 61.350861);
+    Point<double> goal_pose(goal.pose.position.x + 18.713085, goal.pose.position.y + 61.350861);
+
+    auto start = topoMap.areaContaining(start_pose);
+    auto end = topoMap.areaContaining(goal_pose);
+
+    std::pair<Point<double>, int> start_node(start_pose, start->id());
+    std::pair<Point<double>, int> goal_node(goal_pose, end->id());
+
+    auto path = find_path_along_skeleton(utils::global_point_to_grid_cell_round(start_node.first, topoMap.voronoiSkeleton()),
+                                         utils::global_point_to_grid_cell_round(goal_node.first, topoMap.voronoiSkeleton()),
+                                         SKELETON_CELL_REDUCED_SKELETON,
+                                         topoMap.voronoiSkeleton());
+    // std::vector<Point<double>> global_path;
+    // for(auto& cell : path.cells){
+    tf2::Quaternion myQuaternion;
+    for(int i=0;i < path.cells.size() - 1; i++){
+
+        auto global_point_current = utils::grid_point_to_global_point(path.cells[i],topoMap.voronoiSkeleton());
+        auto global_point_next = utils::grid_point_to_global_point(path.cells[i + 1], topoMap.voronoiSkeleton());
+        geometry_msgs::PoseStamped path_pose;
+        path_pose.pose.position.x = global_point_current.x - 18.713085;
+        path_pose.pose.position.y = global_point_current.y - 61.350861;
+
+        double delta_y = global_point_next.y - global_point_current.y;
+        double delta_x = global_point_next.x - global_point_current.x;
+
+        double angle = atan2(delta_y,delta_x);
+
+        myQuaternion.setRPY( 0, 0, angle );
+
+        myQuaternion.normalize();
+
+        path_pose.pose.orientation = tf2::toMsg(myQuaternion);
+
+        path_pose.header.frame_id = "map";
+        plan.push_back(path_pose);
+        // std::cout<<global_point<<std::endl;
     }
+    return true;
 
- bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,  std::vector<geometry_msgs::PoseStamped>& plan ){
-
-   //  points_for_spline temp_pt, start_pt, goal_pt;
-   //  std::vector<points_for_spline> points;
-   //  double path_length, extra_pt_dist;
-   //  start_pt.x = start.pose.position.x;
-   //  start_pt.y = start.pose.position.y;
-   //  start_pt.heading = getYawFromQuat(start.pose.orientation);
-   //  goal_pt.heading = getYawFromQuat(goal.pose.orientation);
-   //  goal_pt.x = goal.pose.position.x;
-   //  goal_pt.y = goal.pose.position.y;
-   //  path_length = sqrt(pow(start_pt.x-goal_pt.x,2));//+pow(start_pt.y-goal_pt.y,2));
-   //  extra_pt_dist = path_length/10;
-   //  temp_pt.x = start_pt.x-2*extra_pt_dist*cos(start_pt.heading);
-   //  temp_pt.y = start_pt.y-2*extra_pt_dist*sin(start_pt.heading);
-   //  points.push_back(temp_pt);
-   //  temp_pt.x = start_pt.x-extra_pt_dist*cos(start_pt.heading);
-   //  temp_pt.y = start_pt.y-extra_pt_dist*sin(start_pt.heading);
-   //  points.push_back(temp_pt);
-   //  points.push_back(start_pt);
-   //  points.push_back(goal_pt);
-   //  temp_pt.x = goal_pt.x+extra_pt_dist*cos(goal_pt.heading);
-   //  temp_pt.y = goal_pt.y+extra_pt_dist*sin(goal_pt.heading);
-   //  points.push_back(temp_pt);
-   //  temp_pt.x = goal_pt.x+2*extra_pt_dist*cos(goal_pt.heading);
-   //  temp_pt.y = goal_pt.y+2*extra_pt_dist*sin(goal_pt.heading);
-   //  points.push_back(temp_pt);
-   //  std::vector<points_for_spline> path_points;
-
-   //  std::vector<double> x(6),y(6);
-   //    std::sort(points.begin(), points.end(), sort_function);
-   //    for (unsigned int i =0; i<points.size(); i++)
-   //    {
-   //      x.at(i) = points.at(i).x;
-   //      y.at(i) = points.at(i).y;
-   //    }
-      
-   //    tk::spline s;
-   //    s.set_points(x,y);
-   //  if(goal_pt.x > start_pt.x)
-   //  {
-   //    for (double i = start_pt.x; i<goal_pt.x; i+=extra_pt_dist)
-   //    {
-   //        temp_pt.x = i;
-   //        temp_pt.y = s(i);
-   //        double next_y = s(i+extra_pt_dist);
-   //        temp_pt.heading = atan2(next_y-temp_pt.y, extra_pt_dist);
-   //        path_points.push_back(temp_pt);
-   //    }
-   //  }
-   //  else // Do something for moving in just y 
-   //  {
-   //    for (double i = start_pt.x; i<goal_pt.x; i-=extra_pt_dist)
-   //    {
-   //        temp_pt.x = i;
-   //        temp_pt.y = s(i);
-   //        double next_y = s(i-extra_pt_dist);
-   //        temp_pt.heading = atan2(next_y-temp_pt.y, -extra_pt_dist);
-   //        path_points.push_back(temp_pt);
-   //    }
-   //  }
-    
-   //  cout << "plan length is " << path_points.size() << endl;
-   //  for (int i=0; i<path_points.size(); i++){
-   //   geometry_msgs::PoseStamped new_goal = goal;
-   //   tf::Quaternion goal_quat = tf::createQuaternionFromYaw(path_points.at(i).heading);
-
-   //    new_goal.pose.position.x = path_points.at(i).x;
-   //    new_goal.pose.position.y = path_points.at(i).y;
-   //    new_goal.pose.orientation.x = goal_quat.x();
-   //    new_goal.pose.orientation.y = goal_quat.y();
-   //    new_goal.pose.orientation.z = goal_quat.z();
-   //    new_goal.pose.orientation.w = goal_quat.w();
-
-   // plan.push_back(new_goal);
-   // }
-   // plan.push_back(goal);
-
-  // for (int i=0; i<2; i++){
-  //    geometry_msgs::PoseStamped new_goal = goal;
-  //    tf::Quaternion goal_quat = tf::createQuaternionFromYaw(1.54);
-
-  //     new_goal.pose.position.x = 0.0;
-  //     new_goal.pose.position.y = 0.0;
-  //     new_goal.pose.orientation.x = goal_quat.x();
-  //     new_goal.pose.orientation.y = goal_quat.y();
-  //     new_goal.pose.orientation.z = goal_quat.z();
-  //     new_goal.pose.orientation.w = goal_quat.w();
-
-  //  plan.push_back(new_goal);
-  //  }
-  //  plan.push_back(goal);
-  return true;
  }
 };

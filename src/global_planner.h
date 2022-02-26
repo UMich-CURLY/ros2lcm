@@ -19,10 +19,16 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <nav_msgs/GetPlan.h>
 #include <hssh/local_topological/area_detection/voronoi/search.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <sstream>
 
-  #include <sstream>
-
- using std::string;
+using std::string;
+using namespace std;
+using namespace vulcan;
+using namespace vulcan::system;
+using namespace vulcan::hssh;
+using namespace boost;
 
  #ifndef GLOBAL_PLANNER_CPP
  #define GLOBAL_PLANNER_CPP
@@ -47,7 +53,10 @@
     costmap_2d::Costmap2DROS* costmap_ros_;
     costmap_2d::Costmap2D* costmap_;
     bool initialized_;
-    double getYawFromQuat(geometry_msgs::Quaternion quat);
+    LocalTopoMap topoMap;
+    // LocalTopoGraph graph;
+    // LTGraphType G;
+    // double getYawFromQuat(geometry_msgs::Quaternion quat);
 
   };
  };
