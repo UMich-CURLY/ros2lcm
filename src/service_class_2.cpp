@@ -61,9 +61,9 @@ path_planner(const LocalTopoMap& map, ros::ServiceClient& client_): topoMap(map)
 
         nav_msgs::GetPlan srv;
         
-        if(client.call(srv)){
-            ROS_INFO("Called the A* service!!!!");
-        }
+        // if(client.call(srv)){
+        //     ROS_INFO("Called the A* service!!!!");
+        // }
 
         srv.request.start = start_msg;
         srv.request.goal = goal_msg;

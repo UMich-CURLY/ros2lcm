@@ -133,6 +133,8 @@ link_directories(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/src/Vulcan/build/lib)
 #   src/${PROJECT_NAME}/ros2lcm.cpp
 # )
 
+add_library(global_planner_lib src/global_planner.cpp)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
