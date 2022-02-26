@@ -204,6 +204,15 @@ target_link_libraries(service_node
   -Lbuild/lib
   ${PCL_LIBRARIES}
 )
+
+add_executable(service_node_2 src/service_class_2.cpp)
+target_link_libraries(service_node_2 
+  ${catkin_LIBRARIES}
+  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system 
+  -llocal_topo_hssh_data
+  -Lbuild/lib
+  ${PCL_LIBRARIES}
+)
 #############
 ## Install ##
 #############
