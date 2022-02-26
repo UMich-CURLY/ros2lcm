@@ -9,6 +9,9 @@
 #include <nav_msgs/GetPlan.h>
 #include <hssh/local_topological/area_detection/voronoi/search.h>
 
+#include <hssh/local_topological/area.h>
+#include <hssh/local_topological/area_detection/voronoi/search.h>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
 using namespace vulcan;
 using namespace vulcan::system;
 using namespace vulcan::hssh;
