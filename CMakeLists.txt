@@ -135,12 +135,6 @@ link_directories(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/src/Vulcan/build/lib)
 # )
 
 add_library(global_planner_lib src/global_planner.cpp)
-target_link_libraries(global_planner_lib 
-  ${catkin_LIBRARIES}
-   -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system 
-  -Lbuild/lib
-  ${PCL_LIBRARIES}
-)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

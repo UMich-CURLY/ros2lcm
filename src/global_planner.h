@@ -14,23 +14,23 @@
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
-#include <hssh/local_topological/local_topo_map.h>
-#include <hssh/local_topological/local_topo_graph.h>
-#include <utils/serialized_file_io.h>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
+// #include <hssh/local_topological/local_topo_map.h>
+// #include <hssh/local_topological/local_topo_graph.h>
+// #include <utils/serialized_file_io.h>
+// #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <nav_msgs/GetPlan.h>
-#include <hssh/local_topological/area_detection/voronoi/search.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <sstream>
-#include <hssh/local_topological/areas/path_segment.h>
+// #include <hssh/local_topological/area_detection/voronoi/search.h>
+// #include <tf2/LinearMath/Quaternion.h>
+// #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+// #include <sstream>
+// #include <hssh/local_topological/areas/path_segment.h>
 
-using std::string;
-using namespace std;
-using namespace vulcan;
-using namespace vulcan::system;
-using namespace vulcan::hssh;
-using namespace boost;
+// using std::string;
+// using namespace std;
+// using namespace vulcan;
+// using namespace vulcan::system;
+// using namespace vulcan::hssh;
+// using namespace boost;
 
  #ifndef GLOBAL_PLANNER_CPP
  #define GLOBAL_PLANNER_CPP
@@ -52,10 +52,11 @@ using namespace boost;
 
   private:
 
+    ros::NodeHandle nh_;
     costmap_2d::Costmap2DROS* costmap_ros_;
     costmap_2d::Costmap2D* costmap_;
     bool initialized_;
-    LocalTopoMap topoMap;
+    // LocalTopoMap topoMap;
     // LocalTopoGraph graph;
     // LTGraphType G;
     // double getYawFromQuat(geometry_msgs::Quaternion quat);

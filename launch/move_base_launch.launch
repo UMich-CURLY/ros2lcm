@@ -7,6 +7,8 @@
    <!-- Run the map server -->
    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_path)"/>
 
+   <node name="server_node" pkg="ros2lcm" type="service_node"/>
+
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 
       <rosparam file="$(find ros2lcm)/src/navigation_params/costmap_common_params.yaml" command="load" ns="global_costmap" />
