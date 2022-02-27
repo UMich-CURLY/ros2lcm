@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   tf
+  nav_core
 )
 message(STATUS "foo include dir: ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}")
 ## System dependencies are found with CMake's conventions
@@ -119,7 +120,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}
   ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/src/Vulcan/src
@@ -134,6 +135,12 @@ link_directories(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/src/Vulcan/build/lib)
 # )
 
 add_library(global_planner_lib src/global_planner.cpp)
+target_link_libraries(global_planner_lib 
+  ${catkin_LIBRARIES}
+   -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system 
+  -Lbuild/lib
+  ${PCL_LIBRARIES}
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -251,11 +258,10 @@ target_link_libraries(service_node_2
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+ install(FILES
+   global_planner_plugin.xml
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+ )
 
 #############
 ## Testing ##

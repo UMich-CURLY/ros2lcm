@@ -1,12 +1,9 @@
 #include <pluginlib/class_list_macros.h>
 #include "global_planner.h"
 
-
-
-
-
  //register this planner as a BaseGlobalPlanner plugin
- PLUGINLIB_EXPORT_CLASS(global_planner_tribhi::GlobalPlanner, nav_core::BaseGlobalPlanner)
+
+PLUGINLIB_EXPORT_CLASS(global_planner::GlobalPlanner, nav_core::BaseGlobalPlanner)
 
 using namespace std;
 using namespace vulcan;
@@ -15,7 +12,7 @@ using namespace vulcan::hssh;
 using namespace boost;
 
  //Default Constructor
-namespace global_planner_tribhi{
+namespace global_planner{
 
   struct points_for_spline{
       double x;

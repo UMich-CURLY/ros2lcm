@@ -201,7 +201,7 @@ int main(int argc, char** argv)
     ros::NodeHandle nh_;
     ros::NodeHandle private_nh("~");
     hssh::LocalTopoMap topoMap;
-    if(!utils::load_serializable_from_file("/mnt/Sauna/new_env_laser.ltm", topoMap))
+    if(!utils::load_serializable_from_file("/root/catkin_ws/src/ros2lcm/src/Vulcan/build/bin/new_env_laser.ltm", topoMap))
         {
             std::cerr << "ERROR:LocalTopoPanel: Failed to load topo map to file " << '\n';
         } 
