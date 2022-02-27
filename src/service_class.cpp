@@ -43,8 +43,16 @@ path_planner(const LocalTopoMap& map): topoMap(map), graph(LocalTopoGraph(map))
 };
 
 bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& res){
-    Point<double> start_pose(req.start.pose.position.x + 18.713085, req.start.pose.position.y + 61.350861);
-    Point<double> goal_pose(req.goal.pose.position.x + 18.713085, req.goal.pose.position.y + 61.350861);
+
+    double delta_x = req.start.pose.position.x - req.goal.pose.position.x;
+    double delta_y = req.start.pose.position.y - req.goal.pose.position.y;
+    tf2::Quaternion myQuaternion;
+    geometry_msgs::PoseStamped goal;
+
+    if(sqrt(pow(delta_x,2) + pow(delta_y,2)) > 0.1){
+
+    Point<double> start_pose(req.start.pose.position.x + 18.393824, req.start.pose.position.y + 61.417221);
+    Point<double> goal_pose(req.goal.pose.position.x + 18.393824, req.goal.pose.position.y + 61.417221);
 
     auto start = topoMap.areaContaining(start_pose);
     auto end = topoMap.areaContaining(goal_pose);
@@ -58,19 +66,17 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
                                          topoMap.voronoiSkeleton());
     // std::vector<Point<double>> global_path;
     // for(auto& cell : path.cells){
-    tf2::Quaternion myQuaternion;
 
-    if(path.cells.size() == 0){
-        return false;
-    }
+
+    if(path.cells.size() != 0){
     std::cout<<"Start at: "<<start_pose<<std::endl;
 
     for(int i=0;i < path.cells.size() - 1; i++){
         auto global_point_current = utils::grid_point_to_global_point(path.cells[i],topoMap.voronoiSkeleton());
         auto global_point_next = utils::grid_point_to_global_point(path.cells[i + 1], topoMap.voronoiSkeleton());
         geometry_msgs::PoseStamped path_pose;
-        path_pose.pose.position.x = global_point_current.x - 18.713085;
-        path_pose.pose.position.y = global_point_current.y - 61.350861;
+        path_pose.pose.position.x = global_point_current.x - 18.393824;
+        path_pose.pose.position.y = global_point_current.y - 61.417221;
 
         double delta_y = global_point_next.y - global_point_current.y;
         double delta_x = global_point_next.x - global_point_current.x;
@@ -86,13 +92,31 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
         path_pose.header.frame_id = "map";
         res.plan.poses.push_back(path_pose);
         std::cout<<"Path pose: "<<path_pose.pose.position.x<<","<<path_pose.pose.position.y<<std::endl;
+        }
     }
+}
 
+    else{
+        double angle = atan2(delta_y,delta_x);
+        myQuaternion.setRPY( 0, 0, angle );
 
+        myQuaternion.normalize();
+        goal.pose.position.x = req.goal.pose.position.x;
+        goal.pose.position.y = req.goal.pose.position.y;
 
-    geometry_msgs::PoseStamped goal;
+        goal.pose.orientation = tf2::toMsg(myQuaternion);
+
+        goal.header.frame_id = "map";
+        res.plan.poses.push_back(goal);
+        res.plan.header.frame_id = "map";
+
+        return true;
+
+    }
     goal.pose.position.x = req.goal.pose.position.x;
     goal.pose.position.y = req.goal.pose.position.y;
+
+    goal.pose.orientation = tf2::toMsg(myQuaternion);
     goal.header.frame_id = "map";
     res.plan.poses.push_back(goal);
     res.plan.header.frame_id = "map";

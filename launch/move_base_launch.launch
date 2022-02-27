@@ -1,6 +1,6 @@
 <launch>
 
-   <arg name="map_path" default="$(find ros2lcm)/new_env_laser.yaml"/>
+   <arg name="map_path" default="$(find ros2lcm)/final_1.yaml"/>
 
    <master auto="start"/>
 
