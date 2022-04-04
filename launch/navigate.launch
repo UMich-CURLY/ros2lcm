@@ -1,0 +1,6 @@
+<launch>
+
+<include file="$(find ros2lcm)/launch/habitat_launch.launch"/>
+<include file="$(find ros2lcm)/launch/turtle_launch.launch"/>
+
+</launch>
