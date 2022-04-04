@@ -21,7 +21,7 @@ TrajectoryPlannerROS:
   allow_unknown: false
 
   dwa: true
-  sim_time: 3
+  sim_time: 1
 
 NavfnROS:
     allow_unknown: false
