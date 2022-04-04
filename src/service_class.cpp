@@ -104,7 +104,8 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
         goal.pose.position.x = req.goal.pose.position.x;
         goal.pose.position.y = req.goal.pose.position.y;
 
-        goal.pose.orientation = tf2::toMsg(myQuaternion);
+        // goal.pose.orientation = tf2::toMsg(myQuaternion);
+        goal.pose.orientation = req.goal.pose.orientation;
 
         goal.header.frame_id = "map";
         res.plan.poses.push_back(goal);
@@ -116,7 +117,8 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
     goal.pose.position.x = req.goal.pose.position.x;
     goal.pose.position.y = req.goal.pose.position.y;
 
-    goal.pose.orientation = tf2::toMsg(myQuaternion);
+    // goal.pose.orientation = tf2::toMsg(myQuaternion);
+    goal.pose.orientation = req.goal.pose.orientation;
     goal.header.frame_id = "map";
     res.plan.poses.push_back(goal);
     res.plan.header.frame_id = "map";
