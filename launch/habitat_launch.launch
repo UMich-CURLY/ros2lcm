@@ -4,7 +4,7 @@
     <remap from="image" to="/robot_1_depth"/>
     <remap from="camera_info" to="/robot_1_camera_info_topic"/>
     <param name="output_frame_id" value="laser" />
-    <param name="scan_height" value="5" />
+    <param name="scan_height" value="2" />
     <param name="scan_time" value="0.025" />
     
     <!-- <param name="range_max" value="50.0" /> -->
