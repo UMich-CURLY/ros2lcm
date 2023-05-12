@@ -10,8 +10,8 @@
   
   <param name="use_sim_time" type="bool" value="false"/>
   <node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb" args="standalone rtabmap_ros/point_cloud_xyzrgb" output="screen">
-  <remap from="rgb/image"        to="/robot_1_rgb"/>
-      <remap from="depth/image"      to="/robot_1_depth"/>
+  <remap from="rgb/image"        to="/robot_1_rgb_mirrored"/>
+      <remap from="depth/image"      to="/robot_1_depth_mirrored"/>
       <remap from="rgb/camera_info"  to="/robot_1_camera_info_topic"/>
       <remap from="cloud"       to="rgbd_cloud"/> <!-- output -->
       
@@ -25,5 +25,6 @@
       <!-- Should be true for not synchronized camera topics 
            (e.g., false for kinectv2, zed, realsense, true for xtion, kinect360)-->
       <param name="approx_sync"       value="true"/> 
+      <param name="frame_id"       value="base_link"/> 
     </node>
 </launch>
