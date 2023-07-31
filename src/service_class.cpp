@@ -43,7 +43,7 @@ path_planner(const LocalTopoMap& map): topoMap(map), graph(LocalTopoGraph(map))
 };
 
 bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& res){
-
+    std::cout << "Okay for now"<<std::endl;
     double delta_x = req.start.pose.position.x - req.goal.pose.position.x;
     double delta_y = req.start.pose.position.y - req.goal.pose.position.y;
     tf2::Quaternion myQuaternion;
@@ -53,13 +53,13 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
 
     Point<double> start_pose(req.start.pose.position.x + 18.393824, req.start.pose.position.y + 61.417221);
     Point<double> goal_pose(req.goal.pose.position.x + 18.393824, req.goal.pose.position.y + 61.417221);
-
+    std::cout << "Okay for now2"<<std::endl;
     auto start = topoMap.areaContaining(start_pose);
     auto end = topoMap.areaContaining(goal_pose);
 
     std::pair<Point<double>, int> start_node(start_pose, start->id());
     std::pair<Point<double>, int> goal_node(goal_pose, end->id());
-
+    
     auto path = find_path_along_skeleton(utils::global_point_to_grid_cell_round(start_node.first, topoMap.voronoiSkeleton()),
                                          utils::global_point_to_grid_cell_round(goal_node.first, topoMap.voronoiSkeleton()),
                                          SKELETON_CELL_REDUCED_SKELETON,
@@ -127,15 +127,14 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
 
 int main(int argc, char** argv)
 {
-
     ros::init(argc, argv, "path_pub");
     ros::NodeHandle nh_;
     ros::NodeHandle private_nh("~");
     hssh::LocalTopoMap topoMap;
-
+    
     if(!utils::load_serializable_from_file("/root/catkin_ws/src/ros2lcm/final_1.ltm", topoMap))
         {
-            std::cerr << "ERROR:LocalTopoPanel: Failed to load topo map to file " << '\n';
+            std::cout << "ERROR:LocalTopoPanel: Failed to load topo map to file " << '\n';
         } 
     path_planner planner(topoMap);
 

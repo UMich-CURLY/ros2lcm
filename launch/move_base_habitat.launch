@@ -4,9 +4,9 @@
 
    
 
-   <node name="server_node" pkg="ros2lcm" type="service_node"/>
+   <node name="server_node" pkg="ros2lcm" type="service_node" output = "screen"/>
 
-   <remap from="planner_cloud" to="/rtabmap/local_grid_obstacle"/>
+   <!-- <remap from="planner_cloud" to="/rtabmap/local_grid_obstacle"/> -->
    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 
       <rosparam file="$(find ros2lcm)/navigation_params/costmap_common_params.yaml" command="load" ns="global_costmap" />
@@ -15,7 +15,7 @@
       <rosparam file="$(find ros2lcm)/navigation_params/global_costmap_params.yaml" command="load" />
       <rosparam file="$(find ros2lcm)/navigation_params/base_local_planner_params.yaml" command="load" />
    </node>
-   <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ros2lcm)/rtab.rviz" />
+   <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ros2lcm)/rtab.rviz" /> -->
 
 	<!-- <node pkg="tf" type="static_transform_publisher" name="map_to_base_frame" args="0.0 0.0 0.0 0.0 0.0 0.0 map /base_frame 1" /> -->
 

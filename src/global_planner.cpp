@@ -112,6 +112,7 @@ namespace global_planner{
     //     plan.push_back(path_pose);
     //     // std::cout<<global_point<<std::endl;
     // }
+
     ros::ServiceClient client = nh_.serviceClient<nav_msgs::GetPlan>("/plan_path");
 
     nav_msgs::GetPlan srv;
