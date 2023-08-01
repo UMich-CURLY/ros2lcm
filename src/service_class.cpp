@@ -51,9 +51,13 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
 
     if(sqrt(pow(delta_x,2) + pow(delta_y,2)) > 0.1){
 
-    Point<double> start_pose(req.start.pose.position.x + 18.393824, req.start.pose.position.y + 61.417221);
-    Point<double> goal_pose(req.goal.pose.position.x + 18.393824, req.goal.pose.position.y + 61.417221);
-    std::cout << "Okay for now2"<<std::endl;
+    Point<double> start_pose(req.start.pose.position.x + 1.0, req.start.pose.position.y + 42.225);
+    Point<double> goal_pose(req.goal.pose.position.x + 1.0, req.goal.pose.position.y + 42.225);
+    // for(std::size_t n = 0; n < topoMap.areas_.size(); ++n)
+    // {
+    //     std::cout << topoMap.areas_[n].extent << std::endl;
+    // }
+    
     auto start = topoMap.areaContaining(start_pose);
     auto end = topoMap.areaContaining(goal_pose);
 
@@ -69,14 +73,13 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
 
 
     if(path.cells.size() != 0){
-    std::cout<<"Start at: "<<start_pose<<std::endl;
 
     for(int i=0;i < path.cells.size() - 1; i++){
         auto global_point_current = utils::grid_point_to_global_point(path.cells[i],topoMap.voronoiSkeleton());
         auto global_point_next = utils::grid_point_to_global_point(path.cells[i + 1], topoMap.voronoiSkeleton());
         geometry_msgs::PoseStamped path_pose;
-        path_pose.pose.position.x = global_point_current.x - 18.393824;
-        path_pose.pose.position.y = global_point_current.y - 61.417221;
+        path_pose.pose.position.x = global_point_current.x - 1;
+        path_pose.pose.position.y = global_point_current.y - 42.225;
 
         double delta_y = global_point_next.y - global_point_current.y;
         double delta_x = global_point_next.x - global_point_current.x;
@@ -91,7 +94,7 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
 
         path_pose.header.frame_id = "map";
         res.plan.poses.push_back(path_pose);
-        std::cout<<"Path pose: "<<path_pose.pose.position.x<<","<<path_pose.pose.position.y<<std::endl;
+        // std::cout<<"Path pose: "<<path_pose.pose.position.x<<","<<path_pose.pose.position.y<<std::endl;
         }
     }
 }
@@ -131,8 +134,8 @@ int main(int argc, char** argv)
     ros::NodeHandle nh_;
     ros::NodeHandle private_nh("~");
     hssh::LocalTopoMap topoMap;
-    
-    if(!utils::load_serializable_from_file("/root/catkin_ws/src/ros2lcm/final_1.ltm", topoMap))
+    std::cout<<"In main !!"<<std::endl;
+    if(!utils::load_serializable_from_file("/root/catkin_ws/src/ros2lcm/trying_VV.ltm", topoMap))
         {
             std::cout << "ERROR:LocalTopoPanel: Failed to load topo map to file " << '\n';
         } 
