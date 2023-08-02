@@ -15,6 +15,7 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <yaml-cpp/yaml.h>
 
 using namespace vulcan;
 using namespace vulcan::system;
@@ -32,6 +33,22 @@ bool path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response&
 path_planner(const LocalTopoMap& map): topoMap(map), graph(LocalTopoGraph(map))
 {
     G = graph.getGraph();
+    YAML::Node config;
+    config = YAML::LoadFile("/root/catkin_ws/src/ros2lcm/trying_VV.yaml");
+    if (config.IsNull())
+    {
+        std::cout << "Error: YAML::Node is Null, indicating the yaml file was empty or invalid.\n";
+    }
+    YAML::Node origin = config["origin"];
+    // if (config["origin"])
+    // {
+    //     std::cout << "Yes";
+    // }
+    // double y_offset = config["resolution"].as<double>();
+    // std::cout<< "Dying before printing";
+    // std::cout <<y_offset<<std::endl;
+    // std::cout<< x_offset<< "  " << y_offset<<std::endl;
+
 }
 
 ~path_planner()

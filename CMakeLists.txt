@@ -7,6 +7,7 @@ project(ros2lcm)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+list(APPEND CMAKE_PREFIX_PATH "/root/catkin_ws/src/ros2lcm/src/Vulcan/external/yaml-cpp")
 find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   roscpp
@@ -15,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   nav_core
+  yaml-cpp REQUIRED
 )
 message(STATUS "foo include dir: ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}")
 ## System dependencies are found with CMake's conventions
@@ -202,7 +204,7 @@ target_link_libraries(distance_node
 add_executable(service_node src/service_class.cpp)
 target_link_libraries(service_node 
   ${catkin_LIBRARIES}
-  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system 
+  -llocal_metric_hssh_data -lhssh_utils -lvulcan_vision -lvulcan_lcm -lvulcan_laser -llcm -lvulcan_system -lvulcan_vision -lvulcan_sensors -lvulcan_robot -lvulcan_utils -lvulcan_robot -lvulcan_utils -lvulcan_math -lvulcan_core -lsvm -llinear -larmadillo -lrt -lpthread -llevmar -llapack -lblas -lboost_iostreams -lboost_filesystem -lboost_system -lyaml-cpp
   -llocal_topo_hssh_data
   -Lbuild/lib
   ${PCL_LIBRARIES}
