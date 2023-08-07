@@ -16,7 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   nav_core
-  yaml-cpp REQUIRED
+  message_generation
+  message_runtime
 )
 message(STATUS "foo include dir: ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}")
 ## System dependencies are found with CMake's conventions
@@ -72,7 +73,10 @@ message(STATUS "foo include dir: ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}")
 #   Action1.action
 #   Action2.action
 # )
-
+# add_service_files(
+#   FILES
+#   sdf_grid.srv
+# )
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
