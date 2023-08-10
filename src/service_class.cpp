@@ -29,7 +29,8 @@ hssh::LocalTopoMap topoMap;
 LocalTopoGraph graph;
 LTGraphType G;
 bool path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& res);
-
+double x_offset;
+double y_offset;
 path_planner(const LocalTopoMap& map): topoMap(map), graph(LocalTopoGraph(map))
 {
     G = graph.getGraph();
@@ -40,14 +41,13 @@ path_planner(const LocalTopoMap& map): topoMap(map), graph(LocalTopoGraph(map))
         std::cout << "Error: YAML::Node is Null, indicating the yaml file was empty or invalid.\n";
     }
     YAML::Node origin = config["origin"];
-    // if (config["origin"])
-    // {
-    //     std::cout << "Yes";
-    // }
-    // double y_offset = config["resolution"].as<double>();
-    // std::cout<< "Dying before printing";
-    // std::cout <<y_offset<<std::endl;
-    // std::cout<< x_offset<< "  " << y_offset<<std::endl;
+    x_offset = origin[0].as<double>();
+    y_offset = origin[1].as<double>();
+    if (config["origin"])
+    {
+        std::cout << "Yes";
+        
+    }
 
 }
 
@@ -68,8 +68,8 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
 
     if(sqrt(pow(delta_x,2) + pow(delta_y,2)) > 0.1){
 
-    Point<double> start_pose(req.start.pose.position.x + 1.0, req.start.pose.position.y + 42.225);
-    Point<double> goal_pose(req.goal.pose.position.x + 1.0, req.goal.pose.position.y + 42.225);
+    Point<double> start_pose(req.start.pose.position.x -this->x_offset, req.start.pose.position.y -this->y_offset);
+    Point<double> goal_pose(req.goal.pose.position.x -this->x_offset, req.goal.pose.position.y -this->y_offset);
     // for(std::size_t n = 0; n < topoMap.areas_.size(); ++n)
     // {
     //     std::cout << topoMap.areas_[n].extent << std::endl;
@@ -95,8 +95,8 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
         auto global_point_current = utils::grid_point_to_global_point(path.cells[i],topoMap.voronoiSkeleton());
         auto global_point_next = utils::grid_point_to_global_point(path.cells[i + 1], topoMap.voronoiSkeleton());
         geometry_msgs::PoseStamped path_pose;
-        path_pose.pose.position.x = global_point_current.x - 1;
-        path_pose.pose.position.y = global_point_current.y - 42.225;
+        path_pose.pose.position.x = global_point_current.x + this->x_offset;
+        path_pose.pose.position.y = global_point_current.y + this->y_offset;
 
         double delta_y = global_point_next.y - global_point_current.y;
         double delta_x = global_point_next.x - global_point_current.x;
