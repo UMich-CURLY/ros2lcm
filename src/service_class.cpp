@@ -35,7 +35,7 @@ path_planner(const LocalTopoMap& map): topoMap(map), graph(LocalTopoGraph(map))
 {
     G = graph.getGraph();
     YAML::Node config;
-    config = YAML::LoadFile("/root/catkin_ws/src/ros2lcm/trying_VV.yaml");
+    config = YAML::LoadFile("/root/catkin_ws/src/SoLo_TDIRL/maps/maps/resolution_Vt2qJdWjCF2_0.025.yaml");
     if (config.IsNull())
     {
         std::cout << "Error: YAML::Node is Null, indicating the yaml file was empty or invalid.\n";
@@ -67,20 +67,20 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
     geometry_msgs::PoseStamped goal;
 
     if(sqrt(pow(delta_x,2) + pow(delta_y,2)) > 0.1){
-
+    std::cout << "Okay for now 2"<<std::endl;
     Point<double> start_pose(req.start.pose.position.x -this->x_offset, req.start.pose.position.y -this->y_offset);
     Point<double> goal_pose(req.goal.pose.position.x -this->x_offset, req.goal.pose.position.y -this->y_offset);
     // for(std::size_t n = 0; n < topoMap.areas_.size(); ++n)
     // {
     //     std::cout << topoMap.areas_[n].extent << std::endl;
     // }
-    
+    std::cout << "Okay for now 3"<<std::endl;
     auto start = topoMap.areaContaining(start_pose);
     auto end = topoMap.areaContaining(goal_pose);
 
     std::pair<Point<double>, int> start_node(start_pose, start->id());
     std::pair<Point<double>, int> goal_node(goal_pose, end->id());
-    
+    std::cout << "Okay for now 4"<<std::endl;
     auto path = find_path_along_skeleton(utils::global_point_to_grid_cell_round(start_node.first, topoMap.voronoiSkeleton()),
                                          utils::global_point_to_grid_cell_round(goal_node.first, topoMap.voronoiSkeleton()),
                                          SKELETON_CELL_REDUCED_SKELETON,
@@ -88,7 +88,7 @@ bool path_planner::path_callback(nav_msgs::GetPlan::Request& req, nav_msgs::GetP
     // std::vector<Point<double>> global_path;
     // for(auto& cell : path.cells){
 
-
+    std::cout << "Okay for now 5"<<std::endl;
     if(path.cells.size() != 0){
 
     for(int i=0;i < path.cells.size() - 1; i++){
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     ros::NodeHandle private_nh("~");
     hssh::LocalTopoMap topoMap;
     std::cout<<"In main !!"<<std::endl;
-    if(!utils::load_serializable_from_file("/root/catkin_ws/src/ros2lcm/trying_VV.ltm", topoMap))
+    if(!utils::load_serializable_from_file("/root/catkin_ws/src/SoLo_TDIRL/maps/maps/Vt2qJdWjCF2.ltm", topoMap))
         {
             std::cout << "ERROR:LocalTopoPanel: Failed to load topo map to file " << '\n';
         } 
