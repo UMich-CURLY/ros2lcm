@@ -8,10 +8,14 @@
 <arg name="use_map_topic"  default="true" />
 
 <arg name="amcl_include" default="$(find fetch_navigation)/launch/include/amcl.launch.xml" />
-<!-- <arg name="gazebo_include" default="$(find umma_navigation)/launch/gazebo_launch.launch" /> -->
-<!-- <arg name="gazebo_include" default="$(find fetch_gazebo)/launch/museum.launch" /> -->
-<arg name="move_base_include" default="$(find umma_navigation)/launch/include/move_base_sim.launch.xml" />
+<!-- <arg name="move_base_include" default="$(find umma_navigation)/launch/include/move_base_sim.launch.xml" /> -->
 
+<!-- localize the robot -->
+<include file="$(arg amcl_include)" >
+  <arg name="scan_topic" value="$(arg scan_topic)" />
+  <arg name="map_topic" value="$(arg map_topic)" />
+  <arg name="use_map_topic" value="$(arg use_map_topic)" />
+</include>
 
 <!-- localize the robot -->
 <!-- <include file="$(arg amcl_include)" >
@@ -37,7 +41,7 @@
 </include> -->
 
 <!-- generate cost map -->
-  <node pkg="move_base" type="move_base" name="move_base" respawn="true" output="screen">
+  <!-- <node pkg="move_base" type="move_base" name="move_base" respawn="true" output="screen">
     <rosparam file="$(find umma_navigation)/params/costmap_common.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find umma_navigation)/params/fetch/costmap_common.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find umma_navigation)/params/costmap_common.yaml" command="load" ns="local_costmap" />
@@ -47,7 +51,7 @@
     <rosparam file="$(find umma_navigation)/params/costmap_global.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find umma_navigation)/params/fetch/costmap_global.yaml" command="load" ns="global_costmap" />
     
-  </node>
+  </node> -->
 
 <!-- <node pkg="explore_lite" type="explore" respawn="false" name="explore" output="screen"> 
   <rosparam file="$(find ros2lcm)/config/exploration.yaml" command="load" />    
