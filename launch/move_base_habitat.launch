@@ -4,9 +4,9 @@
 
    
 
-   <node name="server_node" pkg="ros2lcm" type="service_node" output = "screen">
+   <!-- <node name="server_node" pkg="ros2lcm" type="service_node" output = "screen">
       <param name="scene" value = "Vt2qJdWjCF2"/>
-   </node>
+   </node> -->
 
    <!-- <remap from="planner_cloud" to="/rtabmap/local_grid_obstacle"/> -->
    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">

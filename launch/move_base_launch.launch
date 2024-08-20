@@ -1,23 +1,55 @@
 <launch>
 
-   <arg name="map_path" default="$(find ros2lcm)/final_1.yaml"/>
+   <arg name="map_path" default="$(find ros2lcm)/src/Vulcan/mymap.yaml"/>
 
    <master auto="start"/>
+   <arg name="scan_topic" default="base_scan" />
+   <arg name="map_topic" default="map" />
+   <arg name="cmd_vel_topic" default="cmd_vel" />
+   <arg name="odom_topic" default="odom" />
+   <arg name="use_map_topic"  default="true" />
 
+   <arg name="amcl_include" default="$(find fetch_navigation)/launch/include/amcl.launch.xml" />
+   <!-- <arg name="move_base_include" default="$(find umma_navigation)/launch/include/move_base_sim.launch.xml" /> -->
+
+   <!-- localize the robot -->
+   <include file="$(arg amcl_include)" >
+   <arg name="scan_topic" value="$(arg scan_topic)" />
+   <arg name="map_topic" value="$(arg map_topic)" />
+   <arg name="use_map_topic" value="$(arg use_map_topic)" />
+   </include>
    <!-- Run the map server -->
    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_path)"/>
 
-   <node name="server_node" pkg="ros2lcm" type="service_node"/>
+   <!-- <node name="server_node" pkg="ros2lcm" type="service_node"/> -->
 
-    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <!-- <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 
       <rosparam file="$(find ros2lcm)/src/navigation_params/costmap_common_params.yaml" command="load" ns="global_costmap" />
       <rosparam file="$(find ros2lcm)/src/navigation_params/costmap_common_params.yaml" command="load" ns="local_costmap" />
       <rosparam file="$(find ros2lcm)/src/navigation_params/local_costmap_params.yaml" command="load" />
       <rosparam file="$(find ros2lcm)/src/navigation_params/global_costmap_params.yaml" command="load" />
       <rosparam file="$(find ros2lcm)/src/navigation_params/base_local_planner_params.yaml" command="load" />
-   </node>
+   </node> -->
+  <arg name="name" value="fetch" />
 
-	<node pkg="tf" type="static_transform_publisher" name="map_to_base_frame" args="0.0 0.0 0.0 0.0 0.0 0.0 map /base_frame 1" />
+
+  <!-- planners, costmaps, etc -->
+  <node pkg="move_base" type="move_base" name="move_base" respawn="true" output="screen">
+    <rosparam file="$(find fetch_navigation)/config/costmap_common.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find fetch_navigation)/config/$(arg name)/costmap_common.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find fetch_navigation)/config/costmap_common.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find fetch_navigation)/config/$(arg name)/costmap_common.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find fetch_navigation)/config/costmap_local.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find fetch_navigation)/config/$(arg name)/costmap_local.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find fetch_navigation)/config/costmap_global.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find fetch_navigation)/config/$(arg name)/costmap_global.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find fetch_navigation)/config/move_base.yaml" command="load" />
+    <rosparam file="$(find fetch_navigation)/config/$(arg name)/move_base.yaml" command="load" />
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+    <remap from="map" to="$(arg map_topic)" />
+  </node>
+	<node pkg="tf" type="static_transform_publisher" name="map_to_base_frame" args="0.0 0.0 0.0 0.0 0.0 0.0 /base_link base_frame 1" />
 
    </launch>

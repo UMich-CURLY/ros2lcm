@@ -1,9 +1,9 @@
 local_costmap:
   global_frame: map
-  robot_base_frame: base_frame
+  robot_base_frame: base_link
   update_frequency: 2.0
   publish_frequency: 2.0
-  static_map: false
+  static_map: true
   rolling_window: true
   width: 4.0
   height: 4.0
@@ -11,6 +11,10 @@ local_costmap:
   origin_x: -2.0
   origin_y: -2.0
 
+
+  plugins:
+      - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
+      # - {name: inflatsion_layer, type: "costmap_2d::InflationLayer"}
   # observation_sources: point_cloud_sensor
 
   # # assuming receiving a cloud from rtabmap_ros/obstacles_detection node
@@ -27,9 +31,9 @@ local_costmap:
     observation_sources: scan
 
     scan: {
-      sensor_frame: laser, 
+      sensor_frame: laser_link, 
       data_type: LaserScan, 
-      topic: /scan, 
+      topic: /base_scan, 
       marking: true, 
       clearing: true,
       min_obstacle_height: 0.0, 
