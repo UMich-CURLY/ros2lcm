@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-
+<!-- <arg name="use_sim_time" default="true" /> -->
 <arg name="scan_topic" default="base_scan" />
 <arg name="map_topic" default="map" />
 <arg name="cmd_vel_topic" default="cmd_vel" />
@@ -17,6 +17,13 @@
   <arg name="use_map_topic" value="$(arg use_map_topic)" />
 </include>
 
+
+<!-- <arg name="map_path" default="$(find ros2lcm)/mymap.yaml"/>
+
+<master auto="start"/>
+
+<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_path)"/> -->
+
 <!-- localize the robot -->
 <!-- <include file="$(arg amcl_include)" >
 <arg name="scan_topic" value="$(arg scan_topic)" />
@@ -26,7 +33,7 @@
 
 <!-- <include file="$(find fetch_navigation)/launch/build_map.launch" /> -->
 
-<node pkg="gmapping" type="slam_gmapping" name="gmapping_thing" output="screen" >
+<!-- <node pkg="gmapping" type="slam_gmapping" name="gmapping_thing" output="screen" >
   <remap from="scan" to="base_scan" />
   <param name="odom_frame" value="odom" />
   <param name="base_frame" value="base_link" />
@@ -34,7 +41,7 @@
   <param name="linearUpdate" value="0.1" />
   <param name="angularUpdate" value="0.05" />
   <param name="temporalUpdate" value="0.5" />
-</node>
+</node> -->
 
 
 <!-- <include file="$(arg gazebo_include)" >

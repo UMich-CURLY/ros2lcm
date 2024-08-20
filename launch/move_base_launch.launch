@@ -1,6 +1,7 @@
 <launch>
 
-   <arg name="map_path" default="$(find ros2lcm)/final_1.yaml"/>
+
+   <arg name="map_path" default="$(find ros2lcm)/mymap.yaml"/>
 
    <master auto="start"/>
 
@@ -9,7 +10,7 @@
 
    <node name="server_node" pkg="ros2lcm" type="service_node"/>
 
-    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 
       <rosparam file="$(find ros2lcm)/src/navigation_params/costmap_common_params.yaml" command="load" ns="global_costmap" />
       <rosparam file="$(find ros2lcm)/src/navigation_params/costmap_common_params.yaml" command="load" ns="local_costmap" />
